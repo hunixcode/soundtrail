@@ -1,7 +1,8 @@
-import { useCallback, useState } from 'react';
+import { useCallback, useEffect, useRef, useState, type ComponentRef, type RefObject } from 'react';
 import { FlatList, StyleSheet, View, useWindowDimensions } from 'react-native';
 import { router, useFocusEffect } from 'expo-router';
-import Animated, { FadeIn, FadeOut, useAnimatedStyle, useSharedValue, withDelay, withTiming } from 'react-native-reanimated';
+import { BlurTargetView, BlurView } from 'expo-blur';
+import Animated, { FadeIn, FadeOut, useAnimatedStyle, useSharedValue, withDelay, withSpring, withTiming } from 'react-native-reanimated';
 
 import type { LibraryItem } from '../../../modules/soundtrail-audio';
 import { Artwork } from '../../components/Artwork';
@@ -13,7 +14,7 @@ import { Screen } from '../../components/Screen';
 import { Slider } from '../../components/Slider';
 import { TrackRow } from '../../components/TrackRow';
 import { Txt } from '../../components/Txt';
-import { formatSpeed } from '../../audio/speed';
+import { FINE_SPEED, SPEED_STEP, formatSpeed } from '../../audio/speed';
 import { formatTime, subtitle } from '../../library/format';
 import {
   currentItem,
@@ -21,13 +22,14 @@ import {
   next,
   previous,
   seekTo,
+  setSpeed,
   skipTo,
   togglePlay,
   toggleShuffle,
   useApp,
 } from '../../state/app';
 import { TAB_HREF, previousTab } from '../../state/nav';
-import { useColors } from '../../theme/useTheme';
+import { useColors, useScheme } from '../../theme/useTheme';
 import { layout, motion, radius, space } from '../../theme/tokens';
 
 type Stage = 'art' | 'lyrics' | 'queue';
@@ -40,6 +42,7 @@ export default function PlayerScreen() {
   const { reserve } = useIslandMetrics(true);
   const item = useApp(currentItem);
   const [stage, setStage] = useState<Stage>('art');
+  const blurTarget = useRef<ComponentRef<typeof View>>(null);
   const toggle = (next: Stage) => setStage((s) => (s === next ? 'art' : next));
   const artSize = Math.min(width - space.xxl * 2, layout.maxContentWidth - space.xxl * 2, height * 0.42);
 
@@ -92,7 +95,7 @@ export default function PlayerScreen() {
 
       {item ? (
         <View style={[styles.body, { paddingBottom: reserve }]}>
-          <View style={styles.stage}>
+          <BlurTargetView ref={blurTarget} style={styles.stage}>
             {stage === 'queue' ? (
               <Animated.View key="queue" entering={FadeIn.duration(250)} exiting={FadeOut.duration(150)} style={styles.fill}>
                 <Queue />
@@ -108,7 +111,7 @@ export default function PlayerScreen() {
                 </Animated.View>
               </Animated.View>
             )}
-          </View>
+          </BlurTargetView>
 
           <View style={styles.meta}>
             <View style={styles.metaText}>
@@ -119,7 +122,7 @@ export default function PlayerScreen() {
                 {subtitle(item)}
               </Txt>
             </View>
-            <SpeedBadge />
+            <SpeedBadge blurTarget={blurTarget} />
           </View>
 
           <Progress />
@@ -145,19 +148,77 @@ export default function PlayerScreen() {
   );
 }
 
-function SpeedBadge() {
+const FINE_STEPS = Math.round((FINE_SPEED.max - FINE_SPEED.min) / SPEED_STEP);
+const BADGE_WIDTH = 76;
+const BADGE_HEIGHT = 36;
+const OPEN_WIDTH = 32;
+const OPEN_HEIGHT = 220;
+const FINE_THUMB = 14;
+
+function SpeedBadge({ blurTarget }: { blurTarget: RefObject<ComponentRef<typeof View> | null> }) {
   const colors = useColors();
+  const scheme = useScheme();
   const speed = useApp((s) => s.prefs.speed);
+  const [open, setOpen] = useState(false);
+  const grow = useSharedValue(0);
+  const span = FINE_SPEED.max - FINE_SPEED.min;
+  const ratio = (Math.min(FINE_SPEED.max, Math.max(FINE_SPEED.min, speed)) - FINE_SPEED.min) / span;
+  const onChange = useCallback((r: number) => setSpeed(FINE_SPEED.min + r * span), [span]);
+
+  useEffect(() => {
+    grow.set(withSpring(open ? 1 : 0, motion.spring));
+  }, [open, grow]);
+
+  const shell = useAnimatedStyle(() => ({
+    width: BADGE_WIDTH + grow.value * (OPEN_WIDTH - BADGE_WIDTH),
+    right: (grow.value * (BADGE_WIDTH - OPEN_WIDTH)) / 2,
+    height: BADGE_HEIGHT + grow.value * (OPEN_HEIGHT - BADGE_HEIGHT),
+  }));
+  const reveal = useAnimatedStyle(() => ({ opacity: grow.value * grow.value }));
+  const label = useAnimatedStyle(() => ({ opacity: (1 - grow.value) * (1 - grow.value) }));
+
   return (
-    <PressableScale
-      onPress={() => router.navigate('/speed')}
-      accessibilityLabel={`Playback speed ${formatSpeed(speed)}. Opens the speed page.`}
-      style={[styles.badge, { borderColor: colors.borderSubtle }]}
-    >
-      <Txt variant="mono" tone={speed === 1 ? 'secondary' : 'primary'}>
-        {formatSpeed(speed)}
-      </Txt>
-    </PressableScale>
+    <View style={styles.badgeSlot}>
+      <Animated.View
+        style={[
+          styles.badge,
+          { borderColor: colors.borderSubtle },
+          shell,
+        ]}
+      >
+        <BlurView
+          blurTarget={blurTarget}
+          blurMethod="dimezisBlurViewSdk31Plus"
+          intensity={40}
+          tint={scheme === 'dark' ? 'dark' : 'light'}
+          style={StyleSheet.absoluteFill}
+        />
+        <Animated.View style={[styles.badgeInner, reveal]} pointerEvents={open ? 'auto' : 'none'}>
+          <Slider
+            vertical
+            value={ratio}
+            steps={FINE_STEPS}
+            onChange={onChange}
+            thickness={2}
+            thumbSize={FINE_THUMB}
+            label="Playback speed"
+            valueText={formatSpeed(speed)}
+          />
+        </Animated.View>
+        <PressableScale
+          onPress={() => setOpen((v) => !v)}
+          accessibilityLabel={`Playback speed ${formatSpeed(speed)}. ${open ? 'Closes' : 'Opens'} the speed slider.`}
+          accessibilityState={{ expanded: open }}
+          style={styles.badgeFace}
+        >
+          <Animated.View style={label}>
+            <Txt variant="mono" tone={speed === 1 ? 'secondary' : 'primary'} numberOfLines={1}>
+              {formatSpeed(speed)}
+            </Txt>
+          </Animated.View>
+        </PressableScale>
+      </Animated.View>
+    </View>
   );
 }
 
@@ -288,14 +349,26 @@ const styles = StyleSheet.create({
   artWrap: { alignItems: 'center', justifyContent: 'center' },
   meta: { flexDirection: 'row', alignItems: 'flex-end', gap: space.md },
   metaText: { flex: 1, gap: space.xs },
+  badgeSlot: { width: BADGE_WIDTH, height: BADGE_HEIGHT },
   badge: {
-    minHeight: 36,
-    paddingHorizontal: space.md,
+    position: 'absolute',
+    right: 0,
+    bottom: 0,
     borderRadius: radius.pill,
     borderWidth: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
+    overflow: 'hidden',
+    zIndex: 1,
   },
+  badgeInner: {
+    position: 'absolute',
+    left: 0,
+    right: 0,
+    bottom: BADGE_HEIGHT,
+    height: OPEN_HEIGHT - BADGE_HEIGHT,
+    alignItems: 'center',
+    paddingTop: space.lg,
+  },
+  badgeFace: { position: 'absolute', left: 0, right: 0, bottom: 0, height: BADGE_HEIGHT - 2, alignItems: 'center', justifyContent: 'center' },
   progress: { gap: 0 },
   times: { flexDirection: 'row', justifyContent: 'space-between', marginTop: -space.sm },
   controls: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingBottom: space.sm },

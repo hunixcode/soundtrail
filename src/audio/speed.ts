@@ -2,6 +2,7 @@ export const MIN_SPEED = 0.5;
 export const MAX_SPEED = 2;
 export const SPEED_STEP = 0.01;
 export const SPEED_PRESETS = [0.75, 1, 1.25, 1.5] as const;
+export const FINE_SPEED = { min: 0.9, max: 1.1 } as const;
 
 export function clampSpeed(value: number): number {
   if (!Number.isFinite(value)) return 1;
