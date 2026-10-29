@@ -10,6 +10,7 @@ export const palettes = {
     fgSecondary: '#A3A3A3',
     fgTertiary: '#6B6B6B',
     fgInverse: '#000000',
+    scrim: 'rgba(0, 0, 0, 0.6)',
   },
   light: {
     bgBase: '#FFFFFF',
@@ -20,6 +21,7 @@ export const palettes = {
     fgSecondary: '#595959',
     fgTertiary: '#8C8C8C',
     fgInverse: '#FFFFFF',
+    scrim: 'rgba(0, 0, 0, 0.35)',
   },
 } as const;
 

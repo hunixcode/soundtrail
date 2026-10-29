@@ -14,13 +14,15 @@ type Props = {
   active: boolean;
   playing: boolean;
   onPress: (item: LibraryItem) => void;
+  onLongPress?: (item: LibraryItem) => void;
 };
 
-export const TrackRow = memo(function TrackRow({ item, active, playing, onPress }: Props) {
+export const TrackRow = memo(function TrackRow({ item, active, playing, onPress, onLongPress }: Props) {
   const colors = useColors();
   return (
     <Pressable
       onPress={() => onPress(item)}
+      onLongPress={onLongPress ? () => onLongPress(item) : undefined}
       android_ripple={{ color: colors.bgSunken }}
       accessibilityRole="button"
       accessibilityLabel={`${item.title}, ${subtitle(item)}`}

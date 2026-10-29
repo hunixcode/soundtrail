@@ -16,13 +16,15 @@ type Props = {
   active: boolean;
   playing: boolean;
   onPress: (item: LibraryItem) => void;
+  onLongPress?: (item: LibraryItem) => void;
 };
 
-export const TrackTile = memo(function TrackTile({ item, size, active, playing, onPress }: Props) {
+export const TrackTile = memo(function TrackTile({ item, size, active, playing, onPress, onLongPress }: Props) {
   const colors = useColors();
   return (
     <PressableScale
       onPress={() => onPress(item)}
+      onLongPress={onLongPress ? () => onLongPress(item) : undefined}
       hitSlop={0}
       accessibilityLabel={`${item.title}, ${subtitle(item)}`}
       accessibilityState={{ selected: active }}

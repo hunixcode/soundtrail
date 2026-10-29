@@ -1,6 +1,6 @@
 import { describe, expect, it } from '@jest/globals';
 import type { LibraryItem } from '../modules/soundtrail-audio';
-import { filterLibrary, formatTime, subtitle } from '../src/library/format';
+import { cleanFileName, filterLibrary, formatTime, subtitle } from '../src/library/format';
 
 const item = (title: string, artist: string | null, album: string | null): LibraryItem => ({
   id: title,
@@ -30,5 +30,11 @@ describe('format', () => {
     expect(filterLibrary(items, 'pix')).toHaveLength(1);
     expect(filterLibrary(items, 'DOOL')[0].title).toBe('Hey');
     expect(filterLibrary(items, '  ')).toHaveLength(2);
+  });
+
+  it('cleans file names for renaming', () => {
+    expect(cleanFileName('  my/song:\tremix?  ')).toBe('mysong remix');
+    expect(cleanFileName('a'.repeat(200))).toHaveLength(120);
+    expect(cleanFileName('<>|')).toBe('');
   });
 });

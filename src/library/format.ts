@@ -19,3 +19,7 @@ export function filterLibrary(items: LibraryItem[], query: string): LibraryItem[
     [item.title, item.artist, item.album].some((field) => field?.toLocaleLowerCase().includes(needle)),
   );
 }
+
+export function cleanFileName(name: string): string {
+  return name.replace(/\s+/g, ' ').replace(/[\\/:*?"<>|\u0000-\u001f]/g, '').trim().slice(0, 120);
+}

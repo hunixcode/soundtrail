@@ -3,6 +3,7 @@ import * as DocumentPicker from 'expo-document-picker';
 
 import Audio, {
   type EqualizerState,
+  type QueueItem,
   type LibraryItem,
   type PlaybackError,
   type PlaybackErrorCode,
@@ -11,6 +12,7 @@ import Audio, {
 } from '../../modules/soundtrail-audio';
 import { BUILT_IN_PRESETS, clampGain, curveFromBands, gainsForBands, type Preset } from '../audio/presets';
 import { clampSpeed } from '../audio/speed';
+import { cleanFileName } from '../library/format';
 import { createStore, useStore } from './createStore';
 import { DEFAULT_PREFS, parsePrefs, type LibraryView, type Prefs, type ThemePreference } from './prefs';
 
@@ -43,7 +45,7 @@ const IDLE_STATUS: PlaybackStatus = {
   repeat: 'off',
 };
 
-export const ERROR_MESSAGES: Record<PlaybackErrorCode | 'EQ_UNAVAILABLE' | 'PICK_FAILED', string> = {
+export const ERROR_MESSAGES: Record<PlaybackErrorCode | 'EQ_UNAVAILABLE' | 'PICK_FAILED' | 'FILE_EDIT_FAILED', string> = {
   UNSUPPORTED_FORMAT: 'This file format is not supported.',
   CORRUPT_FILE: 'This file looks damaged and cannot be played.',
   NO_AUDIO_TRACK: 'This file has no audio track.',
@@ -51,6 +53,7 @@ export const ERROR_MESSAGES: Record<PlaybackErrorCode | 'EQ_UNAVAILABLE' | 'PICK
   PLAYBACK_ERROR: 'Playback stopped because of an error.',
   EQ_UNAVAILABLE: 'Equalizer not available on this device.',
   PICK_FAILED: 'That file could not be opened.',
+  FILE_EDIT_FAILED: 'That change could not be made to the file.',
 };
 
 export const store = createStore<AppState>({
@@ -149,7 +152,11 @@ export async function scanLibrary(ask = true) {
       }
     }
     const library = await Audio.scanLibrary();
-    store.set({ library, libraryStatus: 'ready' });
+    const { renamed } = store.get().prefs;
+    store.set({
+      library: library.map((item) => (renamed[item.id] ? { ...item, title: renamed[item.id] } : item)),
+      libraryStatus: 'ready',
+    });
   } catch {
     store.set({ libraryStatus: 'error' });
   }
@@ -173,19 +180,57 @@ export async function playList(items: LibraryItem[], index: number) {
   dismissError();
   store.set({ queue: items });
   await ensureNotificationPermission();
-  const artwork = store.get().artwork;
-  await Audio.setQueue(
-    items.map((item) => ({
-      id: item.id,
-      uri: item.uri,
-      title: item.title,
-      artist: item.artist,
-      artworkUri: artwork[item.uri] ?? null,
-    })),
-    index,
-    true,
-  );
+  await Audio.setQueue(items.map(toQueueItem), index, true);
 }
+
+function toQueueItem(item: LibraryItem): QueueItem {
+  return {
+    id: item.id,
+    uri: item.uri,
+    title: item.title,
+    artist: item.artist,
+    artworkUri: store.get().artwork[item.uri] ?? null,
+  };
+}
+
+export async function enqueue(item: LibraryItem, next: boolean) {
+  const { queue, status } = store.get();
+  if (queue.length === 0 || status.index < 0) return playList([item], 0);
+  const at = next ? status.index + 1 : queue.length;
+  store.set({ queue: [...queue.slice(0, at), item, ...queue.slice(at)] });
+  await Audio.enqueue(toQueueItem(item), next);
+}
+
+export const isDeviceFile = (item: LibraryItem) => item.id.startsWith('audio:');
+
+export const MOVE_FOLDERS = ['Music', 'Podcasts', 'Audiobooks', 'Recordings', 'Ringtones', 'Alarms', 'Notifications'] as const;
+
+async function editFile(run: () => Promise<boolean>) {
+  try {
+    const done = await run();
+    if (done) {
+      await scanLibrary(false);
+      store.set((s) => ({ queue: s.queue.map((q) => s.library.find((l) => l.id === q.id) ?? q) }));
+    }
+    return done;
+  } catch {
+    reportError('FILE_EDIT_FAILED');
+    return false;
+  }
+}
+
+export function renameTrack(item: LibraryItem, name: string) {
+  const clean = cleanFileName(name);
+  if (!clean) return Promise.resolve(false);
+  return editFile(async () => {
+    const done = await Audio.renameFile(item.uri, clean);
+    if (done) updatePrefs({ renamed: { ...store.get().prefs.renamed, [item.id]: clean } });
+    return done;
+  });
+}
+
+export const moveTrack = (item: LibraryItem, folder: string) => editFile(() => Audio.moveFile(item.uri, folder));
+export const deleteTrack = (item: LibraryItem) => editFile(() => Audio.deleteFile(item.uri));
 
 export function togglePlay() {
   const { status } = store.get();

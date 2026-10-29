@@ -9,6 +9,7 @@ import { useIslandMetrics } from '../../components/IslandNav';
 import { PressableScale } from '../../components/PressableScale';
 import { Screen } from '../../components/Screen';
 import { TrackRow } from '../../components/TrackRow';
+import { TrackMenu } from '../../components/TrackMenu';
 import { TrackTile } from '../../components/TrackTile';
 import { Txt } from '../../components/Txt';
 import { filterLibrary } from '../../library/format';
@@ -103,6 +104,8 @@ export default function LibraryScreen() {
     playList(items, Math.max(0, items.indexOf(item)));
   }, [items]);
 
+  const [menuItem, setMenuItem] = useState<LibraryItem | null>(null);
+  const closeMenu = useCallback(() => setMenuItem(null), []);
   const view = useApp((s) => s.prefs.libraryView);
   const { width } = useWindowDimensions();
   const grid = view === 'grid';
@@ -113,9 +116,9 @@ export default function LibraryScreen() {
   const renderItem = useCallback(
     ({ item }: { item: LibraryItem }) =>
       grid ? (
-        <TrackTile item={item} size={tile} active={item.id === mediaId} playing={playing} onPress={onPress} />
+        <TrackTile item={item} size={tile} active={item.id === mediaId} playing={playing} onPress={onPress} onLongPress={setMenuItem} />
       ) : (
-        <TrackRow item={item} active={item.id === mediaId} playing={playing} onPress={onPress} />
+        <TrackRow item={item} active={item.id === mediaId} playing={playing} onPress={onPress} onLongPress={setMenuItem} />
       ),
     [grid, tile, mediaId, playing, onPress],
   );
@@ -232,6 +235,7 @@ export default function LibraryScreen() {
           }
         />
       )}
+      <TrackMenu item={menuItem} onClose={closeMenu} />
     </Screen>
   );
 }
