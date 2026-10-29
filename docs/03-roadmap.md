@@ -26,11 +26,11 @@ Each milestone ends with something that runs on a real Android device.
 - Small speed label on the Player that opens the Speed page.
 - **Done when:** 0.5x and 2.0x are audibly correct and the pitch moves with the speed on a test tone (440 Hz at 1.5x sounds as 660 Hz), and the Speed page value survives an app restart.
 
-### M3 · Video as sound source
-- File picker for video.
-- Audio track plays through the same pipeline.
+### M3 · Open a file
+- File picker for audio files.
+- Picked files play through the same pipeline.
 - Clear messages for "no audio track" and "unsupported format".
-- **Done when:** MP4 and MKV files play their sound, and a silent video shows the no-audio message.
+- **Done when:** a picked MP3 plays, and a file with no audio shows the no-audio message.
 
 ### M4 · Equalizer
 - Band list from the device, sliders, on/off switch.
@@ -55,8 +55,8 @@ Each milestone ends with something that runs on a real Android device.
 | A3 | Lock-screen and notification controls | Play, pause, next, previous work. |
 | A4 | Speed 0.5x–2.0x | Audible change; a 440 Hz test tone plays at 440 Hz times the speed. |
 | A5 | Speed is saved | Value is the same after app restart. |
-| A6 | Video audio plays | MP4 and MKV with audio play their sound. |
-| A7 | Silent video | Shows "no audio track" and does not crash. |
+| A6 | Picked file plays | An audio file opened from the picker plays. |
+| A7 | File with no audio | Shows "no audio track" and does not crash. |
 | A8 | Corrupt file | Shows an error and the app keeps running. |
 | A9 | Equalizer on/off and bands | Changes are audible during playback. |
 | A10 | Equalizer fallback | On a device without an effect, the screen says so and playback still works. |
@@ -90,7 +90,7 @@ These need an answer before the milestone that depends on them. Each one has a r
 | D1 | Package manager | npm (`package-lock.json`) | M0 |
 | D2 | Settings storage | **Decided:** SharedPreferences through the audio module | M0 |
 | D3 | Equalizer engine | Android `Equalizer` effect on the Media3 audio session; check band support on test devices first | M4 |
-| D4 | Whether video files also show in the Library list | **Decided:** yes, with a Videos filter and a film icon | M3 |
+| D4 | Whether video files are supported | **Decided:** no. Video support was dropped; the app scans and plays audio only | M3 |
 | D5 | Minimum Android version | The lowest the chosen Expo SDK supports, and not below what Media3 requires | M0 |
 | D6 | Package name and app name | Decide before M0 is done, since it changes native config | M0 |
 | D7 | Whether to add pitch shifting later | Out of scope for v1; revisit after M5 | After M5 |
@@ -100,7 +100,6 @@ These need an answer before the milestone that depends on them. Each one has a r
 ## 5. After v1 (ideas, not commitments)
 
 - Pitch shifting independent of speed.
-- Video picture playback.
 - Export a changed audio file.
 - Playlists saved to disk.
 - Google Play release.

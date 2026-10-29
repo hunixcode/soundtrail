@@ -6,8 +6,6 @@ soundtrail is an Android app built with React Native and Expo. It combines three
 2. A **music player** for local audio files.
 3. A **speed changer** that plays audio faster or slower.
 
-It also reads **video files** and plays their audio track through the same equalizer and speed controls.
-
 ## Documents
 
 | File | What it answers |

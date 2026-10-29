@@ -2,11 +2,11 @@
 
 ## 1. Purpose
 
-Let a user listen to their own audio and video files with control over sound quality (equalizer) and tempo (speed), on an Android phone, without a streaming service.
+Let a user listen to their own audio files with control over sound quality (equalizer) and tempo (speed), on an Android phone, without a streaming service.
 
 ## 2. Target user
 
-- A person who keeps music and video files on their phone and wants better sound or slower/faster playback (for example, to learn a song, practice an instrument, or follow a lecture).
+- A person who keeps music files on their phone and wants better sound or slower/faster playback (for example, to learn a song, practice an instrument, or follow a lecture).
 - No account, no cloud, no ads in v1.
 
 ## 3. Scope (v1)
@@ -19,13 +19,12 @@ Let a user listen to their own audio and video files with control over sound qua
 - Background playback with a media notification and lock-screen controls.
 - Supported audio formats: those supported by the platform media engine (Media3/ExoPlayer), at minimum MP3, AAC/M4A, OGG/Vorbis, OPUS, FLAC, and WAV.
 
-### 3.2 Video as a sound source
+### 3.2 Open a file
 
-- The user picks a video file from device storage (or it appears in the library scan, if the scan includes video).
-- The app plays the **audio track** of the video. The picture is not required in v1; the video is a sound source.
-- The equalizer and speed changer apply to that audio exactly as they do to music.
-- Supported containers: those supported by the platform media engine, at minimum MP4, MKV, WebM, and 3GP.
-- Videos with no audio track show a clear message instead of failing silently.
+- Besides the scan, the user can open any audio file from device storage with the system file picker.
+- The equalizer and speed changer apply to it exactly as they do to the library.
+- A file with no audio track shows a clear message instead of failing silently.
+- Video files are not supported.
 
 ### 3.3 Equalizer
 
@@ -50,7 +49,7 @@ Let a user listen to their own audio and video files with control over sound qua
 
 ### 3.6 Shared behavior
 
-- The equalizer and speed settings are global. They apply to every track and every video.
+- The equalizer and speed settings are global. They apply to every track.
 - Playing a new file keeps the current equalizer and speed settings.
 
 ## 4. User stories
@@ -60,7 +59,7 @@ Let a user listen to their own audio and video files with control over sound qua
 | US-1 | scan my phone for audio files | I can see my music in one list |
 | US-2 | play, pause, skip, and seek | I can control playback |
 | US-3 | keep music playing when the screen is off | I can listen while using other apps |
-| US-4 | pick a video file and hear its sound | I can listen to videos as audio |
+| US-4 | open an audio file that is not in the scan | I can play any file I have |
 | US-5 | turn the equalizer on and move band sliders | I can shape the sound |
 | US-6 | choose and save equalizer presets | I can switch sound profiles quickly |
 | US-7 | speed a track up or slow it down, with the pitch following | I get sped-up or slowed versions of my music |
@@ -101,7 +100,7 @@ The mini player is the navbar's expanded "island" state, not a separate bar:
 
 ### 5.3 Screens
 
-1. **Library**: list of audio files and videos (see D4), search box, tap to play. Filters: All, Music, Videos, Online (section 3.5). Button to add a video file. Gear icon opens Settings.
+1. **Library**: list of audio files, search box, tap to play. Filters: On device, Online (section 3.5). Button to open an audio file. Gear icon opens Settings.
 2. **Player** (Spotify-like full now-playing): large square artwork (placeholder when none), title and artist, progress bar with elapsed and remaining time, play/pause (large), previous, next, shuffle and repeat toggles, a lyrics button that swaps the artwork for the lyrics (section 3.5), and a queue button that shows the upcoming tracks as a list. A chevron at the top closes it back to the previous tab. No speed or equalizer controls here, except the small speed label described in section 3.4.
 3. **Speed**: its own page. Large readout of the current speed (for example "1.25x"), a slider from 0.5x to 2.0x in 0.05x steps, a stepper (minus/plus buttons, same step), a reset-to-1.0x button, and quick presets (0.75x, 1.0x, 1.25x, 1.5x). A note under the readout says the pitch follows the speed. Works with no track loaded: the value is saved and applies to the next track.
 4. **Equalizer**: on/off switch, preset picker, band sliders, save-preset button.
@@ -114,7 +113,7 @@ Layout rules: Android phone portrait first. Touch targets at least 48 dp. Text r
 - No iOS build.
 - No paid streaming services, accounts, cloud sync, or ads. Only the free, keyless sources in section 3.5.
 - No pitch shifting independent of speed (a "key change" feature), and no time-stretching that keeps the pitch.
-- No video picture playback, subtitles, or video editing.
+- No video files of any kind (dropped, see D4).
 - No exporting or re-encoding audio files.
 - No tag editing.
 - No playlists saved to disk beyond the current queue.

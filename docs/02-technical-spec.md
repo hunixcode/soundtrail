@@ -9,7 +9,7 @@
 | Navigation | `expo-router` | File-based routing that ships with Expo. |
 | UI | React Native core components plus a small in-house style layer; no UI kit in v1 | Keeps dependencies low. |
 | Local storage (settings, presets) | Android `SharedPreferences`, exposed by the audio module (`getPrefs` / `setPrefs`), validated in `src/state/prefs.ts` | No extra dependency; the native module already exists. |
-| Media file access | `expo-document-picker` (pick a video/audio file) and a MediaStore query in the audio module (scan device audio/video) | The scan needs only a few columns; doing it natively avoids another dependency. |
+| Media file access | `expo-document-picker` (pick an audio file) and a MediaStore query in the audio module (scan device audio) | The scan needs only a few columns; doing it natively avoids another dependency. |
 | Playback and audio effects | **Custom Expo Module** (`modules/soundtrail-audio`) wrapping AndroidX Media3 (ExoPlayer) and the Android audio effects API | Only native code can give us a real equalizer and speed control on the audio output. See section 3. |
 | Testing | Jest with `jest-expo` for JS logic; the native module has unit tests in Kotlin (JUnit) | Matches the Expo defaults. |
 | Build | EAS Build (Android APK/AAB) | Standard Expo build pipeline. |
@@ -63,8 +63,7 @@ Rules:
 
 | Feature | Implementation |
 |---------|----------------|
-| Play a local audio or video file | Media3 `ExoPlayer` with a `MediaItem` built from the file URI. |
-| Audio from video | ExoPlayer selects the audio track automatically; no re-encoding. |
+| Play a local audio file | Media3 `ExoPlayer` with a `MediaItem` built from the file URI. |
 | Speed with pitch following | `player.setPlaybackParameters(PlaybackParameters(speed, speed))`. ExoPlayer resamples the audio, like a record played faster or slower. |
 | Equalizer | `android.media.audiofx.Equalizer` attached to the player's `audioSessionId`. |
 | Background playback and notification | Media3 `MediaSessionService` with a foreground notification. |
@@ -125,7 +124,6 @@ Versions are not written in these docs on purpose. The version in use is whateve
 | Permission | Why | When requested |
 |------------|-----|----------------|
 | `READ_MEDIA_AUDIO` (Android 13+) / `READ_EXTERNAL_STORAGE` (older) | Scan music files | On first open of the Library screen. |
-| `READ_MEDIA_VIDEO` (Android 13+) | Scan and pick video files | When the user taps "Add video" or the library scan needs video. |
 | `FOREGROUND_SERVICE`, `FOREGROUND_SERVICE_MEDIA_PLAYBACK`, `POST_NOTIFICATIONS` | Background playback and its notification | When the first track starts playing. |
 
 `INTERNET` is used only for lyrics and online music. Do not request location, contacts, microphone, camera, or network-state permissions.
@@ -165,4 +163,4 @@ soundtrail/
 
 - Unit tests (Jest) for: state reducer, preset mapping (band count changes), speed clamping (0.5–2.0), settings storage round-trip.
 - Kotlin unit tests for: error code mapping, band gain clamping, speed clamping.
-- Manual device checklist for: playing each supported format, a video with audio, a video without audio, a corrupt file, equalizer change during playback, speed change during playback, background playback with screen off, lock-screen controls, permission denied flow.
+- Manual device checklist for: playing each supported format, a picked file, a file without audio, a corrupt file, equalizer change during playback, speed change during playback, background playback with screen off, lock-screen controls, permission denied flow.

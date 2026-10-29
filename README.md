@@ -1,6 +1,6 @@
 # soundtrail
 
-Open-source Android equalizer, music player and speed changer. It also plays the audio track of video files.
+Open-source Android equalizer, music player and speed changer.
 
 Built with React Native and Expo (SDK 58). Playback, the equalizer and speed (with the pitch following) run in a local Expo module (`modules/soundtrail-audio`) on top of AndroidX Media3.
 
