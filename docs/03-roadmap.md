@@ -23,7 +23,7 @@ Each milestone ends with something that runs on a real Android device.
 ### M2 · Speed changer
 - `setSpeed` in the native module, with the pitch following the speed.
 - Speed page (readout, slider, stepper, reset, quick presets), persisted, working with no track loaded.
-- Small speed label on the Player that opens the Speed page.
+- Small speed badge on the Player that opens a 0.90x–1.10x fine slider in place.
 - **Done when:** 0.5x and 2.0x are audibly correct and the pitch moves with the speed on a test tone (440 Hz at 1.5x sounds as 660 Hz), and the Speed page value survives an app restart.
 
 ### M3 · Open a file
