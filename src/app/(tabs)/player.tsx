@@ -46,8 +46,8 @@ export default function PlayerScreen() {
   const rise = useSharedValue(0);
   useFocusEffect(
     useCallback(() => {
-      rise.set(0);
       rise.set(withDelay(40, withTiming(1, motion.slow)));
+      return () => rise.set(0);
     }, [rise]),
   );
   const artStyle = useAnimatedStyle(() => ({
