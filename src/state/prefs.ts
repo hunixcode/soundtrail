@@ -15,6 +15,7 @@ export type Prefs = {
   shuffle: boolean;
   repeat: RepeatMode;
   libraryView: LibraryView;
+  renamed: Record<string, string>;
 };
 
 export const DEFAULT_PREFS: Prefs = {
@@ -27,6 +28,7 @@ export const DEFAULT_PREFS: Prefs = {
   shuffle: false,
   repeat: 'off',
   libraryView: 'list',
+  renamed: {},
 };
 
 const isRecord = (value: unknown): value is Record<string, unknown> =>
@@ -48,6 +50,15 @@ function parsePresets(value: unknown): Preset[] {
     const points = parseCurve(p.curve);
     return name && points ? [{ id: p.id, name, curve: points, builtIn: false }] : [];
   });
+}
+
+function parseRenamed(value: unknown): Record<string, string> {
+  if (!isRecord(value)) return {};
+  return Object.fromEntries(
+    Object.entries(value).flatMap(([id, name]) =>
+      typeof name === 'string' && name.trim() ? [[id, name.trim().slice(0, 120)]] : [],
+    ),
+  );
 }
 
 export function parsePrefs(json: string | null): Prefs {
@@ -72,5 +83,6 @@ export function parsePrefs(json: string | null): Prefs {
     shuffle: typeof raw.shuffle === 'boolean' ? raw.shuffle : DEFAULT_PREFS.shuffle,
     repeat: raw.repeat === 'all' || raw.repeat === 'one' || raw.repeat === 'off' ? raw.repeat : DEFAULT_PREFS.repeat,
     libraryView: raw.libraryView === 'grid' || raw.libraryView === 'list' ? raw.libraryView : DEFAULT_PREFS.libraryView,
+    renamed: parseRenamed(raw.renamed),
   };
 }
