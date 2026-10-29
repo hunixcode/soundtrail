@@ -14,8 +14,8 @@ export function Screen({ children, style }: { children: ReactNode; style?: Style
 
   useFocusEffect(
     useCallback(() => {
-      opacity.value = 0;
-      opacity.value = withTiming(1, motion.base);
+      opacity.set(0);
+      opacity.set(withTiming(1, motion.base));
     }, [opacity]),
   );
 

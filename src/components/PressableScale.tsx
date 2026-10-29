@@ -20,11 +20,11 @@ export function PressableScale({
       hitSlop={hitSlop}
       accessibilityRole={props.accessibilityRole ?? 'button'}
       onPressIn={(e) => {
-        scale.value = withTiming(0.96, motion.fast);
+        scale.set(withTiming(0.96, motion.fast));
         onPressIn?.(e);
       }}
       onPressOut={(e) => {
-        scale.value = withTiming(1, motion.fast);
+        scale.set(withTiming(1, motion.fast));
         onPressOut?.(e);
       }}
       style={[style, animated]}

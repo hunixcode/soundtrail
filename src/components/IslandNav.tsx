@@ -92,12 +92,12 @@ function NowPlayingStrip() {
     activeOffsetX: [-12, 12],
     failOffsetY: [-12, 12],
     onUpdate: (e) => {
-      offset.value = e.translationX * 0.6;
+      offset.set(e.translationX * 0.6);
     },
     onDeactivate: (e) => {
       if (e.translationX < -60) scheduleOnRN(next);
       else if (e.translationX > 60) scheduleOnRN(previous);
-      offset.value = withSpring(0, motion.spring);
+      offset.set(withSpring(0, motion.spring));
     },
   });
   const tap = useTapGesture({
@@ -160,8 +160,8 @@ export function IslandNav() {
   const islandHeight = useSharedValue(height);
 
   useEffect(() => {
-    islandWidth.value = withSpring(expanded ? expandedWidth : collapsedWidth, motion.spring);
-    islandHeight.value = withSpring(height, motion.spring);
+    islandWidth.set(withSpring(expanded ? expandedWidth : collapsedWidth, motion.spring));
+    islandHeight.set(withSpring(height, motion.spring));
   }, [expanded, expandedWidth, collapsedWidth, height, islandWidth, islandHeight]);
 
   const container = useAnimatedStyle(() => ({ width: islandWidth.value, height: islandHeight.value }));
@@ -178,11 +178,11 @@ export function IslandNav() {
     const frame = frames[active];
     if (!frame) return;
     if (indicatorW.value === 0) {
-      indicatorX.value = frame.x;
-      indicatorW.value = frame.w;
+      indicatorX.set(frame.x);
+      indicatorW.set(frame.w);
     } else {
-      indicatorX.value = withSpring(frame.x, motion.spring);
-      indicatorW.value = withSpring(frame.w, motion.spring);
+      indicatorX.set(withSpring(frame.x, motion.spring));
+      indicatorW.set(withSpring(frame.w, motion.spring));
     }
   }, [active, frames, indicatorX, indicatorW]);
 

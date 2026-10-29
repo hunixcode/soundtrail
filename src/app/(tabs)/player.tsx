@@ -40,8 +40,8 @@ export default function PlayerScreen() {
   const rise = useSharedValue(0);
   useFocusEffect(
     useCallback(() => {
-      rise.value = 0;
-      rise.value = withDelay(40, withTiming(1, motion.slow));
+      rise.set(0);
+      rise.set(withDelay(40, withTiming(1, motion.slow)));
     }, [rise]),
   );
   const artStyle = useAnimatedStyle(() => ({

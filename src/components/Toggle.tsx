@@ -15,8 +15,8 @@ export function Toggle({ value, onChange, label }: { value: boolean; onChange: (
   const tint = useSharedValue(value ? 1 : 0);
 
   useEffect(() => {
-    position.value = withSpring(value ? 1 : 0, motion.spring);
-    tint.value = withTiming(value ? 1 : 0, motion.fast);
+    position.set(withSpring(value ? 1 : 0, motion.spring));
+    tint.set(withTiming(value ? 1 : 0, motion.fast));
   }, [value, position, tint]);
 
   const track = useAnimatedStyle(() => ({

@@ -29,8 +29,8 @@ export function Slider({ value, steps, onChange, onCommit, vertical = false, thi
 
   useEffect(() => {
     if (!dragging.value) {
-      progress.value = withTiming(value, motion.fast);
-      lastStep.value = Math.round(value * steps);
+      progress.set(withTiming(value, motion.fast));
+      lastStep.set(Math.round(value * steps));
     }
   }, [value, steps, progress, dragging, lastStep]);
 
@@ -39,10 +39,10 @@ export function Slider({ value, steps, onChange, onCommit, vertical = false, thi
     if (size.value <= 0) return;
     const raw = vertical ? 1 - position / size.value : position / size.value;
     const clamped = Math.min(1, Math.max(0, raw));
-    progress.value = clamped;
+    progress.set(clamped);
     const step = Math.round(clamped * steps);
     if (step !== lastStep.value) {
-      lastStep.value = step;
+      lastStep.set(step);
       scheduleOnRN(onChange, step / steps);
     }
   };
@@ -50,22 +50,22 @@ export function Slider({ value, steps, onChange, onCommit, vertical = false, thi
   const pan = usePanGesture({
     minDistance: 0,
     onBegin: (e) => {
-      dragging.value = true;
+      dragging.set(true);
       update(vertical ? e.y : e.x);
     },
     onUpdate: (e) => {
       update(vertical ? e.y : e.x);
     },
     onFinalize: () => {
-      dragging.value = false;
+      dragging.set(false);
       const snapped = lastStep.value / steps;
-      progress.value = withSpring(snapped, motion.spring);
+      progress.set(withSpring(snapped, motion.spring));
       if (onCommit) scheduleOnRN(onCommit, snapped);
     },
   });
 
   const onLayout = (e: LayoutChangeEvent) => {
-    size.value = vertical ? e.nativeEvent.layout.height : e.nativeEvent.layout.width;
+    size.set(vertical ? e.nativeEvent.layout.height : e.nativeEvent.layout.width);
   };
 
   const fill = useAnimatedStyle(() =>
