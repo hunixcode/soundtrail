@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState, type ComponentRef, type RefObject } from 'react';
-import { FlatList, StyleSheet, View, useWindowDimensions } from 'react-native';
+import { FlatList, StyleSheet, View, useWindowDimensions, type GestureResponderEvent } from 'react-native';
 import { router, useFocusEffect } from 'expo-router';
 import { BlurTargetView, BlurView } from 'expo-blur';
 import Animated, { FadeIn, FadeOut, useAnimatedStyle, useSharedValue, withDelay, withSpring, withTiming } from 'react-native-reanimated';
@@ -43,6 +43,17 @@ export default function PlayerScreen() {
   const item = useApp(currentItem);
   const [stage, setStage] = useState<Stage>('art');
   const blurTarget = useRef<ComponentRef<typeof View>>(null);
+  const badgeSlot = useRef<ComponentRef<typeof View>>(null);
+  const [tuning, setTuning] = useState(false);
+
+  const closeOutside = (e: GestureResponderEvent) => {
+    if (!tuning) return;
+    const { pageX, pageY } = e.nativeEvent;
+    badgeSlot.current?.measure((_x, _y, w, h, left, top) => {
+      const inside = pageX >= left && pageX <= left + w && pageY >= top + h - OPEN_HEIGHT && pageY <= top + h;
+      if (!inside) setTuning(false);
+    });
+  };
   const toggle = (next: Stage) => setStage((s) => (s === next ? 'art' : next));
   const artSize = Math.min(width - space.xxl * 2, layout.maxContentWidth - space.xxl * 2, height * 0.42);
 
@@ -50,7 +61,10 @@ export default function PlayerScreen() {
   useFocusEffect(
     useCallback(() => {
       rise.set(withDelay(40, withTiming(1, motion.slow)));
-      return () => rise.set(0);
+      return () => {
+        rise.set(0);
+        setTuning(false);
+      };
     }, [rise]),
   );
   const artStyle = useAnimatedStyle(() => ({
@@ -59,7 +73,7 @@ export default function PlayerScreen() {
   }));
 
   return (
-    <Screen>
+    <Screen onTouchStart={closeOutside}>
       <View style={styles.topBar}>
         <View style={styles.side}>
           <PressableScale
@@ -122,7 +136,7 @@ export default function PlayerScreen() {
                 {subtitle(item)}
               </Txt>
             </View>
-            <SpeedBadge blurTarget={blurTarget} />
+            <SpeedBadge blurTarget={blurTarget} slotRef={badgeSlot} open={tuning} onToggle={() => setTuning((v) => !v)} />
           </View>
 
           <Progress />
@@ -155,11 +169,20 @@ const OPEN_WIDTH = 32;
 const OPEN_HEIGHT = 220;
 const FINE_THUMB = 14;
 
-function SpeedBadge({ blurTarget }: { blurTarget: RefObject<ComponentRef<typeof View> | null> }) {
+function SpeedBadge({
+  blurTarget,
+  slotRef,
+  open,
+  onToggle,
+}: {
+  blurTarget: RefObject<ComponentRef<typeof View> | null>;
+  slotRef: RefObject<ComponentRef<typeof View> | null>;
+  open: boolean;
+  onToggle: () => void;
+}) {
   const colors = useColors();
   const scheme = useScheme();
   const speed = useApp((s) => s.prefs.speed);
-  const [open, setOpen] = useState(false);
   const grow = useSharedValue(0);
   const span = FINE_SPEED.max - FINE_SPEED.min;
   const ratio = (Math.min(FINE_SPEED.max, Math.max(FINE_SPEED.min, speed)) - FINE_SPEED.min) / span;
@@ -178,7 +201,7 @@ function SpeedBadge({ blurTarget }: { blurTarget: RefObject<ComponentRef<typeof 
   const label = useAnimatedStyle(() => ({ opacity: (1 - grow.value) * (1 - grow.value) }));
 
   return (
-    <View style={styles.badgeSlot}>
+    <View ref={slotRef} style={styles.badgeSlot}>
       <Animated.View
         style={[
           styles.badge,
@@ -206,7 +229,7 @@ function SpeedBadge({ blurTarget }: { blurTarget: RefObject<ComponentRef<typeof 
           />
         </Animated.View>
         <PressableScale
-          onPress={() => setOpen((v) => !v)}
+          onPress={onToggle}
           accessibilityLabel={`Playback speed ${formatSpeed(speed)}. ${open ? 'Closes' : 'Opens'} the speed slider.`}
           accessibilityState={{ expanded: open }}
           style={styles.badgeFace}

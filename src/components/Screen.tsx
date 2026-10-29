@@ -1,5 +1,5 @@
 import { useCallback, type ReactNode } from 'react';
-import { StyleSheet, View, type StyleProp, type ViewStyle } from 'react-native';
+import { StyleSheet, View, type StyleProp, type ViewProps, type ViewStyle } from 'react-native';
 import { useFocusEffect } from 'expo-router';
 import Animated, { useAnimatedStyle, useSharedValue, withTiming } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -7,7 +7,15 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useColors } from '../theme/useTheme';
 import { layout, motion } from '../theme/tokens';
 
-export function Screen({ children, style }: { children: ReactNode; style?: StyleProp<ViewStyle> }) {
+export function Screen({
+  children,
+  style,
+  onTouchStart,
+}: {
+  children: ReactNode;
+  style?: StyleProp<ViewStyle>;
+  onTouchStart?: ViewProps['onTouchStart'];
+}) {
   const colors = useColors();
   const insets = useSafeAreaInsets();
   const opacity = useSharedValue(0);
@@ -22,7 +30,7 @@ export function Screen({ children, style }: { children: ReactNode; style?: Style
   const fade = useAnimatedStyle(() => ({ opacity: opacity.value }));
 
   return (
-    <View style={[styles.root, { backgroundColor: colors.bgBase, paddingTop: insets.top }]}>
+    <View style={[styles.root, { backgroundColor: colors.bgBase, paddingTop: insets.top }]} onTouchStart={onTouchStart}>
       <Animated.View style={[styles.content, fade, style]}>{children}</Animated.View>
     </View>
   );
