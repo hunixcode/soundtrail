@@ -8,7 +8,7 @@ import android.provider.MediaStore
 object LibraryScanner {
   private const val UNKNOWN = "<unknown>"
 
-  fun scan(context: Context): List<Map<String, Any?>> = audio(context) + video(context)
+  fun scan(context: Context): List<Map<String, Any?>> = audio(context)
 
   private fun audio(context: Context): List<Map<String, Any?>> {
     val base = MediaStore.Audio.Media.EXTERNAL_CONTENT_URI
@@ -41,40 +41,7 @@ object LibraryScanner {
             "title" to (c.getString(title)?.takeIf { it.isNotBlank() } ?: c.getString(name) ?: ""),
             "artist" to c.getString(artist)?.takeIf { it.isNotBlank() && it != UNKNOWN },
             "album" to c.getString(album)?.takeIf { it.isNotBlank() && it != UNKNOWN },
-            "durationMs" to c.getLong(duration).toDouble(),
-            "kind" to "audio"
-          )
-        )
-      }
-    }
-    return items
-  }
-
-  private fun video(context: Context): List<Map<String, Any?>> {
-    val base = MediaStore.Video.Media.EXTERNAL_CONTENT_URI
-    val projection = arrayOf(
-      MediaStore.Video.Media._ID,
-      MediaStore.Video.Media.TITLE,
-      MediaStore.Video.Media.DISPLAY_NAME,
-      MediaStore.Video.VideoColumns.DURATION
-    )
-    val items = mutableListOf<Map<String, Any?>>()
-    context.contentResolver.query(base, projection, null, null, "${MediaStore.Video.Media.DISPLAY_NAME} COLLATE NOCASE ASC")?.use { c ->
-      val id = c.getColumnIndexOrThrow(MediaStore.Video.Media._ID)
-      val title = c.getColumnIndexOrThrow(MediaStore.Video.Media.TITLE)
-      val name = c.getColumnIndexOrThrow(MediaStore.Video.Media.DISPLAY_NAME)
-      val duration = c.getColumnIndexOrThrow(MediaStore.Video.VideoColumns.DURATION)
-      while (c.moveToNext()) {
-        val rowId = c.getLong(id)
-        items.add(
-          mapOf(
-            "id" to "video:$rowId",
-            "uri" to ContentUris.withAppendedId(base, rowId).toString(),
-            "title" to (c.getString(title)?.takeIf { it.isNotBlank() } ?: c.getString(name) ?: ""),
-            "artist" to null,
-            "album" to null,
-            "durationMs" to c.getLong(duration).toDouble(),
-            "kind" to "video"
+            "durationMs" to c.getLong(duration).toDouble()
           )
         )
       }
@@ -97,21 +64,18 @@ object LibraryScanner {
       val artist = retriever.extractMetadata(android.media.MediaMetadataRetriever.METADATA_KEY_ARTIST)
       val duration = retriever.extractMetadata(android.media.MediaMetadataRetriever.METADATA_KEY_DURATION)?.toDoubleOrNull() ?: 0.0
       val hasAudio = retriever.extractMetadata(android.media.MediaMetadataRetriever.METADATA_KEY_HAS_AUDIO) == "yes"
-      val hasVideo = retriever.extractMetadata(android.media.MediaMetadataRetriever.METADATA_KEY_HAS_VIDEO) == "yes"
       mapOf(
         "title" to (title?.takeIf { it.isNotBlank() } ?: name ?: parsed.lastPathSegment ?: ""),
         "artist" to artist?.takeIf { it.isNotBlank() },
         "durationMs" to duration,
-        "hasAudio" to hasAudio,
-        "kind" to if (hasVideo) "video" else "audio"
+        "hasAudio" to hasAudio
       )
     } catch (e: Throwable) {
       mapOf(
         "title" to (name ?: parsed.lastPathSegment ?: ""),
         "artist" to null,
         "durationMs" to 0.0,
-        "hasAudio" to false,
-        "kind" to "video"
+        "hasAudio" to false
       )
     } finally {
       runCatching { retriever.release() }

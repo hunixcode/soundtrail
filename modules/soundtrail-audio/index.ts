@@ -1,7 +1,5 @@
 import { NativeModule, requireNativeModule } from 'expo';
 
-export type MediaKind = 'audio' | 'video';
-
 export type LibraryItem = {
   id: string;
   uri: string;
@@ -9,7 +7,6 @@ export type LibraryItem = {
   artist: string | null;
   album: string | null;
   durationMs: number;
-  kind: MediaKind;
 };
 
 export type FileDescription = {
@@ -17,7 +14,6 @@ export type FileDescription = {
   artist: string | null;
   durationMs: number;
   hasAudio: boolean;
-  kind: MediaKind;
 };
 
 export type RepeatMode = 'off' | 'all' | 'one';

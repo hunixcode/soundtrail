@@ -44,14 +44,7 @@ object ArtworkCache {
     return try {
       retriever.setDataSource(context, Uri.parse(uri))
       val picture = retriever.embeddedPicture
-      val raw = if (picture != null) {
-        decode(picture)
-      } else if (retriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_HAS_VIDEO) == "yes") {
-        retriever.getFrameAtTime(1_000_000L, MediaMetadataRetriever.OPTION_CLOSEST_SYNC)
-      } else {
-        null
-      }
-      raw?.let { scale(it) }
+      picture?.let { decode(it) }?.let { scale(it) }
     } catch (e: Throwable) {
       null
     } finally {
