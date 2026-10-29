@@ -11,17 +11,44 @@ import { Screen } from '../../components/Screen';
 import { TrackRow } from '../../components/TrackRow';
 import { Txt } from '../../components/Txt';
 import { filterLibrary } from '../../library/format';
-import { pickFile, playList, scanLibrary, useApp } from '../../state/app';
+import { findTracks, type OnlineTrack } from '../../online/audius';
+import { pickFile, playList, rememberArtwork, scanLibrary, useApp } from '../../state/app';
 import { useColors } from '../../theme/useTheme';
 import { layout, radius, space, type } from '../../theme/tokens';
 
-type Filter = 'all' | MediaKind;
+type Filter = 'all' | MediaKind | 'online';
 
 const FILTERS: { id: Filter; label: string }[] = [
   { id: 'all', label: 'All' },
   { id: 'audio', label: 'Music' },
   { id: 'video', label: 'Videos' },
+  { id: 'online', label: 'Online' },
 ];
+
+type OnlineState = { key: string; status: 'loading' | 'ready' | 'error'; items: OnlineTrack[] };
+
+function useOnlineTracks(active: boolean, search: string, attempt: number): OnlineState {
+  const key = `${search}:${attempt}`;
+  const [state, setState] = useState<OnlineState>({ key: '', status: 'loading', items: [] });
+  useEffect(() => {
+    if (!active) return;
+    let live = true;
+    const timer = setTimeout(() => {
+      findTracks(search)
+        .then((items) => {
+          if (!live) return;
+          rememberArtwork(Object.fromEntries(items.map((t) => [t.uri, t.artworkUrl])));
+          setState({ key, status: 'ready', items });
+        })
+        .catch(() => live && setState({ key, status: 'error', items: [] }));
+    }, search ? 350 : 0);
+    return () => {
+      live = false;
+      clearTimeout(timer);
+    };
+  }, [active, search, key]);
+  return state.key === key ? state : { ...state, status: 'loading' };
+}
 
 export default function LibraryScreen() {
   const colors = useColors();
@@ -33,16 +60,20 @@ export default function LibraryScreen() {
   const playing = useApp((s) => s.status.isPlaying);
   const [query, setQuery] = useState('');
   const [filter, setFilter] = useState<Filter>('all');
+  const [attempt, setAttempt] = useState(0);
+  const online = filter === 'online';
+  const remote = useOnlineTracks(online, query.trim(), attempt);
 
   useEffect(() => {
     if (libraryStatus === 'idle') scanLibrary();
   }, [libraryStatus]);
 
   const items = useMemo(() => {
+    if (online) return remote.items;
     const all = [...picked, ...library];
     const byKind = filter === 'all' ? all : all.filter((item) => item.kind === filter);
     return filterLibrary(byKind, query);
-  }, [library, picked, filter, query]);
+  }, [library, picked, filter, query, online, remote.items]);
 
   const onPress = useCallback((item: LibraryItem) => {
     playList(items, Math.max(0, items.indexOf(item)));
@@ -76,12 +107,15 @@ export default function LibraryScreen() {
         <TextInput
           value={query}
           onChangeText={setQuery}
-          placeholder="Search title, artist, album"
+          placeholder={online ? 'Search free music on Audius' : 'Search title, artist, album'}
           placeholderTextColor={colors.fgTertiary}
           style={[type.body, styles.input, { color: colors.fgPrimary }]}
           returnKeyType="search"
           accessibilityLabel="Search library"
         />
+        {online && remote.status === 'loading' && remote.items.length > 0 ? (
+          <ActivityIndicator size="small" color={colors.fgTertiary} />
+        ) : null}
         {query ? (
           <PressableScale onPress={() => setQuery('')} accessibilityLabel="Clear search" style={styles.clear}>
             <Icon name="x" size={16} color="fgSecondary" />
@@ -95,11 +129,23 @@ export default function LibraryScreen() {
         ))}
       </View>
 
-      {libraryStatus === 'loading' && library.length === 0 ? (
+      {online && remote.status === 'loading' && remote.items.length === 0 ? (
         <View style={styles.center}>
           <ActivityIndicator color={colors.fgSecondary} />
         </View>
-      ) : libraryStatus === 'denied' ? (
+      ) : online && remote.status === 'error' ? (
+        <Empty
+          icon="wifi-off"
+          title="Could not reach Audius"
+          body="Check your connection and try again."
+          action="Retry"
+          onAction={() => setAttempt((n) => n + 1)}
+        />
+      ) : !online && libraryStatus === 'loading' && library.length === 0 ? (
+        <View style={styles.center}>
+          <ActivityIndicator color={colors.fgSecondary} />
+        </View>
+      ) : !online && libraryStatus === 'denied' ? (
         <Empty
           icon="lock"
           title="Allow access to your music"
@@ -109,7 +155,7 @@ export default function LibraryScreen() {
           secondary="Open system settings"
           onSecondary={() => Linking.openSettings()}
         />
-      ) : libraryStatus === 'error' ? (
+      ) : !online && libraryStatus === 'error' ? (
         <Empty icon="alert-circle" title="Could not read your library" body="Try again in a moment." action="Retry" onAction={() => scanLibrary()} />
       ) : (
         <FlatList
@@ -121,7 +167,9 @@ export default function LibraryScreen() {
           initialNumToRender={14}
           windowSize={7}
           ListEmptyComponent={
-            libraryStatus === 'ready' ? (
+            online ? (
+              <Empty icon="search" title="No matches" body="Try a different search." />
+            ) : libraryStatus === 'ready' ? (
               <Empty
                 icon={query ? 'search' : 'music'}
                 title={query ? 'No matches' : 'No files yet'}
@@ -146,7 +194,7 @@ function Empty({
   secondary,
   onSecondary,
 }: {
-  icon: 'lock' | 'alert-circle' | 'search' | 'music';
+  icon: 'lock' | 'alert-circle' | 'search' | 'music' | 'wifi-off';
   title: string;
   body: string;
   action?: string;

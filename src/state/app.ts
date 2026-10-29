@@ -47,7 +47,7 @@ export const ERROR_MESSAGES: Record<PlaybackErrorCode | 'EQ_UNAVAILABLE' | 'PICK
   UNSUPPORTED_FORMAT: 'This file format is not supported.',
   CORRUPT_FILE: 'This file looks damaged and cannot be played.',
   NO_AUDIO_TRACK: 'This video has no audio track.',
-  IO_ERROR: 'The file could not be read. It may have been moved or deleted.',
+  IO_ERROR: 'This could not be read. The file may have moved, or the connection dropped.',
   PLAYBACK_ERROR: 'Playback stopped because of an error.',
   EQ_UNAVAILABLE: 'Equalizer not available on this device.',
   PICK_FAILED: 'That file could not be opened.',
@@ -290,6 +290,10 @@ export async function clearLibraryCache() {
   await Audio.clearArtworkCache();
   store.set({ artwork: {} });
   await scanLibrary(false);
+}
+
+export function rememberArtwork(entries: Record<string, string | null>) {
+  store.set((s) => ({ artwork: { ...entries, ...s.artwork } }));
 }
 
 const pendingArtwork = new Set<string>();
