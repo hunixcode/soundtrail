@@ -38,7 +38,7 @@ Let a user listen to their own audio and video files with control over sound qua
 ### 3.4 Speed changer
 
 - Playback speed control from 0.5x to 2.0x, in steps of 0.05x, with a reset to 1.0x.
-- Pitch is kept unchanged by default, so speed changes do not sound like a chipmunk or a slowed record. (Pitch shifting is out of scope for v1; see section 6.)
+- Pitch follows the speed, like a record played faster or slower: 1.25x sounds higher, 0.75x sounds lower.
 - Speed setting applies during playback and persists between launches.
 - Speed has its own **Speed page** (section 5, screen 3). It is the main place to change speed. The Now playing page shows the current speed as a small read-only label that opens the Speed page.
 
@@ -57,7 +57,7 @@ Let a user listen to their own audio and video files with control over sound qua
 | US-4 | pick a video file and hear its sound | I can listen to videos as audio |
 | US-5 | turn the equalizer on and move band sliders | I can shape the sound |
 | US-6 | choose and save equalizer presets | I can switch sound profiles quickly |
-| US-7 | change playback speed without changing pitch | I can learn or follow along at my own pace |
+| US-7 | speed a track up or slow it down, with the pitch following | I get sped-up or slowed versions of my music |
 | US-8 | have my equalizer and speed settings remembered | I do not set them again every time |
 | US-9 | open a dedicated Speed page and set the tempo there | I can work on speed without the rest of the player in the way |
 | US-10 | see a Spotify-like player: a mini bar that opens into a full now-playing view | I can follow what is playing from any screen |
@@ -97,7 +97,7 @@ The mini player is the navbar's expanded "island" state, not a separate bar:
 
 1. **Library**: list of audio files and videos (see D4), search box, tap to play. Button to add a video file. Gear icon opens Settings.
 2. **Player** (Spotify-like full now-playing): large square artwork (placeholder when none), title and artist, progress bar with elapsed and remaining time, play/pause (large), previous, next, shuffle and repeat toggles, and a queue button that shows the upcoming tracks as a list. A chevron at the top closes it back to the previous tab. No speed or equalizer controls here, except the small speed label described in section 3.4.
-3. **Speed**: its own page. Large readout of the current speed (for example "1.25x"), a slider from 0.5x to 2.0x in 0.05x steps, a stepper (minus/plus buttons, same step), a reset-to-1.0x button, and quick presets (0.75x, 1.0x, 1.25x, 1.5x). A note under the readout says pitch is kept unchanged. Works with no track loaded: the value is saved and applies to the next track.
+3. **Speed**: its own page. Large readout of the current speed (for example "1.25x"), a slider from 0.5x to 2.0x in 0.05x steps, a stepper (minus/plus buttons, same step), a reset-to-1.0x button, and quick presets (0.75x, 1.0x, 1.25x, 1.5x). A note under the readout says the pitch follows the speed. Works with no track loaded: the value is saved and applies to the next track.
 4. **Equalizer**: on/off switch, preset picker, band sliders, save-preset button.
 5. **Settings** (opened from the Library gear icon): reset equalizer, reset speed, clear library cache, app version. Nothing else in v1.
 
@@ -107,7 +107,7 @@ Layout rules: Android phone portrait first. Touch targets at least 48 dp. Text r
 
 - No iOS build.
 - No streaming, accounts, cloud sync, or ads.
-- No pitch shifting independent of speed (a "key change" feature).
+- No pitch shifting independent of speed (a "key change" feature), and no time-stretching that keeps the pitch.
 - No video picture playback, subtitles, or video editing.
 - No exporting or re-encoding audio files.
 - No tag editing.

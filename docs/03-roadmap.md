@@ -21,10 +21,10 @@ Each milestone ends with something that runs on a real Android device.
 - **Done when:** a local MP3 and a FLAC play in the background with the screen off, and the island's now-playing row shows correct state on every tab.
 
 ### M2 · Speed changer
-- `setSpeed` in the native module, with pitch kept.
+- `setSpeed` in the native module, with the pitch following the speed.
 - Speed page (readout, slider, stepper, reset, quick presets), persisted, working with no track loaded.
 - Small speed label on the Player that opens the Speed page.
-- **Done when:** 0.5x and 2.0x are audibly correct and the pitch is unchanged on a test tone and on a voice recording, and the Speed page value survives an app restart.
+- **Done when:** 0.5x and 2.0x are audibly correct and the pitch moves with the speed on a test tone (440 Hz at 1.5x sounds as 660 Hz), and the Speed page value survives an app restart.
 
 ### M3 · Video as sound source
 - File picker for video.
@@ -53,7 +53,7 @@ Each milestone ends with something that runs on a real Android device.
 | A1 | Library scan finds audio files | Count matches the device's media store. |
 | A2 | Playback in background with screen off | Audio continues for at least 10 minutes. |
 | A3 | Lock-screen and notification controls | Play, pause, next, previous work. |
-| A4 | Speed 0.5x–2.0x | Audible change; pitch unchanged on a 440 Hz test tone. |
+| A4 | Speed 0.5x–2.0x | Audible change; a 440 Hz test tone plays at 440 Hz times the speed. |
 | A5 | Speed is saved | Value is the same after app restart. |
 | A6 | Video audio plays | MP4 and MKV with audio play their sound. |
 | A7 | Silent video | Shows "no audio track" and does not crash. |

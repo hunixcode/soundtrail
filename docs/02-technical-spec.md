@@ -10,7 +10,7 @@
 | UI | React Native core components plus a small in-house style layer; no UI kit in v1 | Keeps dependencies low. |
 | Local storage (settings, presets) | Android `SharedPreferences`, exposed by the audio module (`getPrefs` / `setPrefs`), validated in `src/state/prefs.ts` | No extra dependency; the native module already exists. |
 | Media file access | `expo-document-picker` (pick a video/audio file) and a MediaStore query in the audio module (scan device audio/video) | The scan needs only a few columns; doing it natively avoids another dependency. |
-| Playback and audio effects | **Custom Expo Module** (`modules/soundtrail-audio`) wrapping AndroidX Media3 (ExoPlayer) and the Android audio effects API | Only native code can give us a real equalizer and pitch-preserving speed. See section 3. |
+| Playback and audio effects | **Custom Expo Module** (`modules/soundtrail-audio`) wrapping AndroidX Media3 (ExoPlayer) and the Android audio effects API | Only native code can give us a real equalizer and speed control on the audio output. See section 3. |
 | Testing | Jest with `jest-expo` for JS logic; the native module has unit tests in Kotlin (JUnit) | Matches the Expo defaults. |
 | Build | EAS Build (Android APK/AAB) | Standard Expo build pipeline. |
 
@@ -65,7 +65,7 @@ Rules:
 |---------|----------------|
 | Play a local audio or video file | Media3 `ExoPlayer` with a `MediaItem` built from the file URI. |
 | Audio from video | ExoPlayer selects the audio track automatically; no re-encoding. |
-| Speed without pitch change | `player.setPlaybackParameters(PlaybackParameters(speed, 1.0f))`. ExoPlayer time-stretches the audio. |
+| Speed with pitch following | `player.setPlaybackParameters(PlaybackParameters(speed, speed))`. ExoPlayer resamples the audio, like a record played faster or slower. |
 | Equalizer | `android.media.audiofx.Equalizer` attached to the player's `audioSessionId`. |
 | Background playback and notification | Media3 `MediaSessionService` with a foreground notification. |
 | Position, duration, state events | ExoPlayer listeners forwarded to JS as Expo Module events, at most 4 per second for progress. |
@@ -80,7 +80,7 @@ interface SoundtrailAudio {
   play(): void;
   pause(): void;
   seekTo(ms: number): void;
-  setSpeed(speed: number): void;        // 0.5 – 2.0, pitch kept at 1.0
+  setSpeed(speed: number): void;        // 0.5 – 2.0, pitch follows speed
   setEqEnabled(on: boolean): void;
   getEqBands(): EqBand[];               // from the device, may be empty
   setEqBandGain(index: number, db: number): void;
