@@ -1,0 +1,41 @@
+1<?xml version="1.0" encoding="utf-8"?>
+2<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+3    package="expo.modules.soundtrailaudio" >
+4
+5    <uses-sdk android:minSdkVersion="24" />
+5-->INJECTED
+5-->INJECTED
+6
+7    <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
+7-->/home/hunix/Documents/Personal/Projects/soundtrail/modules/soundtrail-audio/android/src/main/AndroidManifest.xml:2:3-75
+7-->/home/hunix/Documents/Personal/Projects/soundtrail/modules/soundtrail-audio/android/src/main/AndroidManifest.xml:2:20-72
+8    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_MEDIA_PLAYBACK" />
+8-->/home/hunix/Documents/Personal/Projects/soundtrail/modules/soundtrail-audio/android/src/main/AndroidManifest.xml:3:3-90
+8-->/home/hunix/Documents/Personal/Projects/soundtrail/modules/soundtrail-audio/android/src/main/AndroidManifest.xml:3:20-87
+9    <uses-permission android:name="android.permission.WAKE_LOCK" />
+9-->/home/hunix/Documents/Personal/Projects/soundtrail/modules/soundtrail-audio/android/src/main/AndroidManifest.xml:4:3-66
+9-->/home/hunix/Documents/Personal/Projects/soundtrail/modules/soundtrail-audio/android/src/main/AndroidManifest.xml:4:20-63
+10    <uses-permission android:name="android.permission.MODIFY_AUDIO_SETTINGS" />
+10-->/home/hunix/Documents/Personal/Projects/soundtrail/modules/soundtrail-audio/android/src/main/AndroidManifest.xml:5:3-78
+10-->/home/hunix/Documents/Personal/Projects/soundtrail/modules/soundtrail-audio/android/src/main/AndroidManifest.xml:5:20-75
+11
+12    <application>
+12-->/home/hunix/Documents/Personal/Projects/soundtrail/modules/soundtrail-audio/android/src/main/AndroidManifest.xml:7:3-16:17
+13        <service
+13-->/home/hunix/Documents/Personal/Projects/soundtrail/modules/soundtrail-audio/android/src/main/AndroidManifest.xml:8:5-15:15
+14            android:name="expo.modules.soundtrailaudio.PlaybackService"
+14-->/home/hunix/Documents/Personal/Projects/soundtrail/modules/soundtrail-audio/android/src/main/AndroidManifest.xml:9:7-66
+15            android:exported="true"
+15-->/home/hunix/Documents/Personal/Projects/soundtrail/modules/soundtrail-audio/android/src/main/AndroidManifest.xml:10:7-30
+16            android:foregroundServiceType="mediaPlayback" >
+16-->/home/hunix/Documents/Personal/Projects/soundtrail/modules/soundtrail-audio/android/src/main/AndroidManifest.xml:11:7-52
+17            <intent-filter>
+17-->/home/hunix/Documents/Personal/Projects/soundtrail/modules/soundtrail-audio/android/src/main/AndroidManifest.xml:12:7-14:23
+18                <action android:name="androidx.media3.session.MediaSessionService" />
+18-->/home/hunix/Documents/Personal/Projects/soundtrail/modules/soundtrail-audio/android/src/main/AndroidManifest.xml:13:9-78
+18-->/home/hunix/Documents/Personal/Projects/soundtrail/modules/soundtrail-audio/android/src/main/AndroidManifest.xml:13:17-75
+19            </intent-filter>
+20        </service>
+21    </application>
+22
+23</manifest>

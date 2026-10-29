@@ -1,0 +1,26 @@
+plugins {
+  id 'com.android.library'
+  id 'expo-module-gradle-plugin'
+}
+
+group = 'expo.modules.soundtrailaudio'
+version = '0.1.0'
+
+def media3Version = '1.11.1'
+
+android {
+  namespace "expo.modules.soundtrailaudio"
+  defaultConfig {
+    versionCode 1
+    versionName "0.1.0"
+  }
+  lintOptions {
+    abortOnError false
+  }
+}
+
+dependencies {
+  implementation "androidx.media3:media3-exoplayer:${media3Version}"
+  implementation "androidx.media3:media3-session:${media3Version}"
+  testImplementation "junit:junit:4.13.2"
+}

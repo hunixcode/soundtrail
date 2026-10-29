@@ -1,0 +1,48 @@
+-- Merging decision tree log ---
+manifest
+ADDED from /home/hunix/Documents/Personal/Projects/soundtrail/modules/soundtrail-audio/android/src/main/AndroidManifest.xml:1:1-17:12
+INJECTED from /home/hunix/Documents/Personal/Projects/soundtrail/modules/soundtrail-audio/android/src/main/AndroidManifest.xml:1:1-17:12
+	package
+		INJECTED from /home/hunix/Documents/Personal/Projects/soundtrail/modules/soundtrail-audio/android/src/main/AndroidManifest.xml
+	xmlns:android
+		ADDED from /home/hunix/Documents/Personal/Projects/soundtrail/modules/soundtrail-audio/android/src/main/AndroidManifest.xml:1:11-69
+uses-permission#android.permission.FOREGROUND_SERVICE
+ADDED from /home/hunix/Documents/Personal/Projects/soundtrail/modules/soundtrail-audio/android/src/main/AndroidManifest.xml:2:3-75
+	android:name
+		ADDED from /home/hunix/Documents/Personal/Projects/soundtrail/modules/soundtrail-audio/android/src/main/AndroidManifest.xml:2:20-72
+uses-permission#android.permission.FOREGROUND_SERVICE_MEDIA_PLAYBACK
+ADDED from /home/hunix/Documents/Personal/Projects/soundtrail/modules/soundtrail-audio/android/src/main/AndroidManifest.xml:3:3-90
+	android:name
+		ADDED from /home/hunix/Documents/Personal/Projects/soundtrail/modules/soundtrail-audio/android/src/main/AndroidManifest.xml:3:20-87
+uses-permission#android.permission.WAKE_LOCK
+ADDED from /home/hunix/Documents/Personal/Projects/soundtrail/modules/soundtrail-audio/android/src/main/AndroidManifest.xml:4:3-66
+	android:name
+		ADDED from /home/hunix/Documents/Personal/Projects/soundtrail/modules/soundtrail-audio/android/src/main/AndroidManifest.xml:4:20-63
+uses-permission#android.permission.MODIFY_AUDIO_SETTINGS
+ADDED from /home/hunix/Documents/Personal/Projects/soundtrail/modules/soundtrail-audio/android/src/main/AndroidManifest.xml:5:3-78
+	android:name
+		ADDED from /home/hunix/Documents/Personal/Projects/soundtrail/modules/soundtrail-audio/android/src/main/AndroidManifest.xml:5:20-75
+application
+ADDED from /home/hunix/Documents/Personal/Projects/soundtrail/modules/soundtrail-audio/android/src/main/AndroidManifest.xml:7:3-16:17
+service#expo.modules.soundtrailaudio.PlaybackService
+ADDED from /home/hunix/Documents/Personal/Projects/soundtrail/modules/soundtrail-audio/android/src/main/AndroidManifest.xml:8:5-15:15
+	android:exported
+		ADDED from /home/hunix/Documents/Personal/Projects/soundtrail/modules/soundtrail-audio/android/src/main/AndroidManifest.xml:10:7-30
+	android:foregroundServiceType
+		ADDED from /home/hunix/Documents/Personal/Projects/soundtrail/modules/soundtrail-audio/android/src/main/AndroidManifest.xml:11:7-52
+	android:name
+		ADDED from /home/hunix/Documents/Personal/Projects/soundtrail/modules/soundtrail-audio/android/src/main/AndroidManifest.xml:9:7-66
+intent-filter#action:name:androidx.media3.session.MediaSessionService
+ADDED from /home/hunix/Documents/Personal/Projects/soundtrail/modules/soundtrail-audio/android/src/main/AndroidManifest.xml:12:7-14:23
+action#androidx.media3.session.MediaSessionService
+ADDED from /home/hunix/Documents/Personal/Projects/soundtrail/modules/soundtrail-audio/android/src/main/AndroidManifest.xml:13:9-78
+	android:name
+		ADDED from /home/hunix/Documents/Personal/Projects/soundtrail/modules/soundtrail-audio/android/src/main/AndroidManifest.xml:13:17-75
+uses-sdk
+INJECTED from /home/hunix/Documents/Personal/Projects/soundtrail/modules/soundtrail-audio/android/src/main/AndroidManifest.xml reason: use-sdk injection requested
+INJECTED from /home/hunix/Documents/Personal/Projects/soundtrail/modules/soundtrail-audio/android/src/main/AndroidManifest.xml
+INJECTED from /home/hunix/Documents/Personal/Projects/soundtrail/modules/soundtrail-audio/android/src/main/AndroidManifest.xml
+	android:targetSdkVersion
+		INJECTED from /home/hunix/Documents/Personal/Projects/soundtrail/modules/soundtrail-audio/android/src/main/AndroidManifest.xml
+	android:minSdkVersion
+		INJECTED from /home/hunix/Documents/Personal/Projects/soundtrail/modules/soundtrail-audio/android/src/main/AndroidManifest.xml
