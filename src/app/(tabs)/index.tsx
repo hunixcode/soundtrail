@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { ActivityIndicator, FlatList, Linking, StyleSheet, TextInput, View } from 'react-native';
 import { router } from 'expo-router';
 
@@ -11,7 +11,7 @@ import { Screen } from '../../components/Screen';
 import { TrackRow } from '../../components/TrackRow';
 import { Txt } from '../../components/Txt';
 import { filterLibrary } from '../../library/format';
-import { findTracks, type OnlineTrack } from '../../online/audius';
+import { appendTracks, findTracks, type OnlineTrack } from '../../online/audius';
 import { pickFile, playList, rememberArtwork, scanLibrary, useApp } from '../../state/app';
 import { useColors } from '../../theme/useTheme';
 import { layout, radius, space, type } from '../../theme/tokens';
@@ -23,29 +23,52 @@ const FILTERS: { id: Filter; label: string }[] = [
   { id: 'online', label: 'Online' },
 ];
 
-type OnlineState = { key: string; status: 'loading' | 'ready' | 'error'; items: OnlineTrack[] };
+type OnlineState = { key: string; status: 'loading' | 'ready' | 'error'; items: OnlineTrack[]; offset: number; done: boolean };
 
-function useOnlineTracks(active: boolean, search: string, attempt: number): OnlineState {
+const keepArtwork = (tracks: OnlineTrack[]) => rememberArtwork(Object.fromEntries(tracks.map((t) => [t.uri, t.artworkUrl])));
+
+function useOnlineTracks(active: boolean, search: string, attempt: number) {
   const key = `${search}:${attempt}`;
-  const [state, setState] = useState<OnlineState>({ key: '', status: 'loading', items: [] });
+  const [state, setState] = useState<OnlineState>({ key: '', status: 'loading', items: [], offset: 0, done: false });
+  const paging = useRef(false);
+
   useEffect(() => {
     if (!active) return;
     let live = true;
     const timer = setTimeout(() => {
       findTracks(search)
-        .then((items) => {
+        .then(({ tracks, count }) => {
           if (!live) return;
-          rememberArtwork(Object.fromEntries(items.map((t) => [t.uri, t.artworkUrl])));
-          setState({ key, status: 'ready', items });
+          keepArtwork(tracks);
+          setState({ key, status: 'ready', items: tracks, offset: count, done: count === 0 });
         })
-        .catch(() => live && setState({ key, status: 'error', items: [] }));
+        .catch(() => live && setState({ key, status: 'error', items: [], offset: 0, done: true }));
     }, search ? 350 : 0);
     return () => {
       live = false;
       clearTimeout(timer);
     };
   }, [active, search, key]);
-  return state.key === key ? state : { ...state, status: 'loading' };
+
+  const current = state.key === key ? state : { ...state, status: 'loading' as const };
+
+  const more = useCallback(() => {
+    if (paging.current || state.key !== key || state.status !== 'ready' || state.done) return;
+    paging.current = true;
+    findTracks(search, state.offset)
+      .then(({ tracks, count }) => {
+        keepArtwork(tracks);
+        setState((s) =>
+          s.key === key ? { ...s, items: appendTracks(s.items, tracks), offset: s.offset + count, done: count === 0 } : s,
+        );
+      })
+      .catch(() => undefined)
+      .finally(() => {
+        paging.current = false;
+      });
+  }, [state, key, search]);
+
+  return { ...current, more };
 }
 
 export default function LibraryScreen() {
@@ -160,6 +183,13 @@ export default function LibraryScreen() {
           renderItem={renderItem}
           contentContainerStyle={{ paddingBottom: reserve }}
           keyboardShouldPersistTaps="handled"
+          onEndReached={online ? remote.more : undefined}
+          onEndReachedThreshold={0.6}
+          ListFooterComponent={
+            online && remote.status === 'ready' && !remote.done && items.length > 0 ? (
+              <ActivityIndicator style={styles.footer} color={colors.fgTertiary} />
+            ) : undefined
+          }
           initialNumToRender={14}
           windowSize={7}
           ListEmptyComponent={
@@ -250,6 +280,7 @@ const styles = StyleSheet.create({
   clear: { width: 44, height: 44, alignItems: 'center', justifyContent: 'center' },
   filters: { flexDirection: 'row', gap: space.sm, paddingHorizontal: layout.gutter, paddingVertical: space.md },
   center: { flex: 1, alignItems: 'center', justifyContent: 'center' },
+  footer: { paddingVertical: space.lg },
   empty: { alignItems: 'center', gap: space.md, paddingHorizontal: space.xxl, paddingTop: space.xxxl },
   centerText: { textAlign: 'center' },
   primary: {

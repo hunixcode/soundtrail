@@ -27,11 +27,19 @@ export function toOnlineTrack(track: AudiusTrack): OnlineTrack {
   };
 }
 
-export async function findTracks(search: string): Promise<OnlineTrack[]> {
+export const PAGE_SIZE = 40;
+
+export async function findTracks(search: string, offset = 0): Promise<{ tracks: OnlineTrack[]; count: number }> {
   const term = search.trim();
   const path = term ? 'tracks/search' : 'tracks/trending';
   const { data } = await getJson<{ data: AudiusTrack[] }>(
-    `${endpoints.stream}/${path}?${query({ query: term, app_name: appName, limit: 40 })}`,
+    `${endpoints.stream}/${path}?${query({ query: term, app_name: appName, limit: PAGE_SIZE, offset })}`,
   );
-  return data.filter((t) => t.is_streamable !== false && !t.is_stream_gated).map(toOnlineTrack);
+  const tracks = data.filter((t) => t.is_streamable !== false && !t.is_stream_gated).map(toOnlineTrack);
+  return { tracks, count: data.length };
+}
+
+export function appendTracks(current: OnlineTrack[], next: OnlineTrack[]): OnlineTrack[] {
+  const seen = new Set(current.map((t) => t.id));
+  return [...current, ...next.filter((t) => !seen.has(t.id))];
 }

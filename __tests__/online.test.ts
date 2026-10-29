@@ -1,5 +1,5 @@
 import { describe, expect, it } from '@jest/globals';
-import { toOnlineTrack } from '../src/online/audius';
+import { appendTracks, toOnlineTrack } from '../src/online/audius';
 import { query } from '../src/online/http';
 import { activeLine, cleanTitle, parseLrc, pickRecord, toLyrics } from '../src/online/lyrics';
 
@@ -63,5 +63,14 @@ describe('online', () => {
       artworkUrl: 'https://img/150.jpg',
     });
     expect(track.uri).toContain('/tracks/Ab%201/stream?app_name=');
+  });
+
+  it('appends a page without duplicating tracks', () => {
+    const make = (id: string) => toOnlineTrack({ id, title: id, duration: 1 });
+    expect(appendTracks([make('a'), make('b')], [make('b'), make('c')]).map((t) => t.id)).toEqual([
+      'audius:a',
+      'audius:b',
+      'audius:c',
+    ]);
   });
 });
