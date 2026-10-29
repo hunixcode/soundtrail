@@ -155,6 +155,12 @@ export async function scanLibrary(ask = true) {
   }
 }
 
+export function refreshLibrary() {
+  const { libraryStatus } = store.get();
+  if (libraryStatus === 'loading') return;
+  return scanLibrary(libraryStatus === 'idle');
+}
+
 async function ensureNotificationPermission() {
   if (Platform.OS !== 'android' || Number(Platform.Version) < 33) return;
   const permission = PermissionsAndroid.PERMISSIONS.POST_NOTIFICATIONS;

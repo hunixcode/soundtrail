@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { ActivityIndicator, FlatList, Linking, StyleSheet, TextInput, View } from 'react-native';
-import { router } from 'expo-router';
+import { router, useFocusEffect } from 'expo-router';
 
 import type { LibraryItem } from '../../../modules/soundtrail-audio';
 import { Chip } from '../../components/Chip';
@@ -12,7 +12,7 @@ import { TrackRow } from '../../components/TrackRow';
 import { Txt } from '../../components/Txt';
 import { filterLibrary } from '../../library/format';
 import { appendTracks, findTracks, type OnlineTrack } from '../../online/audius';
-import { pickFile, playList, rememberArtwork, scanLibrary, useApp } from '../../state/app';
+import { pickFile, playList, refreshLibrary, rememberArtwork, scanLibrary, useApp } from '../../state/app';
 import { useColors } from '../../theme/useTheme';
 import { layout, radius, space, type } from '../../theme/tokens';
 
@@ -85,9 +85,11 @@ export default function LibraryScreen() {
   const online = filter === 'online';
   const remote = useOnlineTracks(online, query.trim(), attempt);
 
-  useEffect(() => {
-    if (libraryStatus === 'idle') scanLibrary();
-  }, [libraryStatus]);
+  useFocusEffect(
+    useCallback(() => {
+      refreshLibrary();
+    }, []),
+  );
 
   const items = useMemo(() => {
     if (online) return remote.items;
