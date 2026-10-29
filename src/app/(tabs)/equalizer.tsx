@@ -211,7 +211,7 @@ const styles = StyleSheet.create({
   },
   zeroLine: { position: 'absolute', left: space.lg, right: space.lg, top: '50%', height: StyleSheet.hairlineWidth },
   band: { alignItems: 'center', gap: space.sm, flex: 1 },
-  bandSlider: { flex: 1, alignItems: 'center' },
+  bandSlider: { flex: 1, alignItems: 'center', marginVertical: space.sm },
   saveRow: { flexDirection: 'row', alignItems: 'center', gap: space.sm },
   input: { flex: 1, height: 48, borderRadius: radius.card, paddingHorizontal: space.lg, paddingVertical: 0 },
   primary: { minHeight: 48, paddingHorizontal: space.xl, borderRadius: radius.pill, alignItems: 'center', justifyContent: 'center' },
