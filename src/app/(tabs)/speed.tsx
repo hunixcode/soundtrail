@@ -49,7 +49,7 @@ export default function SpeedScreen() {
             </Txt>
           </View>
           <Txt variant="caption" tone="secondary">
-            Pitch stays the same
+            Pitch follows the speed
           </Txt>
         </View>
 
