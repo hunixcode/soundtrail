@@ -14,11 +14,11 @@ Each milestone ends with something that runs on a real Android device.
 ### M1 · Music player (no effects yet)
 - Dynamic-island navbar with Library, Player, Speed, and Equalizer tabs (Equalizer can be a placeholder screen until M4).
 - Library scan with permission flow.
-- Player tab (Spotify-like full view) and mini player above the navbar, with swipe next/previous.
+- Player tab (Spotify-like full view) and the island's now-playing row, with swipe next/previous.
 - Compact now-playing strip in the navbar when a track plays on another tab.
 - Play, pause, seek, next, previous, shuffle, repeat, and a queue list.
 - Background playback with notification and lock-screen controls.
-- **Done when:** a local MP3 and a FLAC play in the background with the screen off, and the navbar strip and mini player show correct state on every tab.
+- **Done when:** a local MP3 and a FLAC play in the background with the screen off, and the island's now-playing row shows correct state on every tab.
 
 ### M2 · Speed changer
 - `setSpeed` in the native module, with pitch kept.
@@ -67,7 +67,7 @@ Each milestone ends with something that runs on a real Android device.
 | A15 | Test devices | Checklist passes on at least two Android devices from different brands. |
 | A16 | Navbar | Four tabs switch correctly; active pill animates; list content is not hidden under the navbar. |
 | A17 | Navbar now-playing strip | Shows while a track plays on another tab; tapping it opens Player; hidden on Player. |
-| A18 | Mini player | Shows above the navbar on Library, Speed, Equalizer; tap opens Player; swipe changes track; hidden when the strip shows. |
+| A18 | Mini player | Island row shows on Library, Speed, Equalizer while a track is loaded; tap opens Player; swipe changes track; collapses on Player. |
 | A19 | Speed page | Slider, stepper, reset, and quick presets all set the same value; value persists and applies with no track loaded. |
 | A20 | Design system | Design acceptance D-A1 to D-A6 in `04-design-system.md` all pass. |
 
@@ -86,9 +86,9 @@ These need an answer before the milestone that depends on them. Each one has a r
 | # | Decision | Recommended default | Needed by |
 |---|----------|---------------------|-----------|
 | D1 | Package manager | npm (`package-lock.json`) | M0 |
-| D2 | Settings storage: SQLite or AsyncStorage | Whichever Expo's current SDK documents as the default for key-value storage | M0 |
+| D2 | Settings storage | **Decided:** SharedPreferences through the audio module | M0 |
 | D3 | Equalizer engine | Android `Equalizer` effect on the Media3 audio session; check band support on test devices first | M4 |
-| D4 | Whether video files also show in the Library list or only via "Add video" | Show them in the Library, with a video badge | M3 |
+| D4 | Whether video files also show in the Library list | **Decided:** yes, with a Videos filter and a film icon | M3 |
 | D5 | Minimum Android version | The lowest the chosen Expo SDK supports, and not below what Media3 requires | M0 |
 | D6 | Package name and app name | Decide before M0 is done, since it changes native config | M0 |
 | D7 | Whether to add pitch shifting later | Out of scope for v1; revisit after M5 | After M5 |

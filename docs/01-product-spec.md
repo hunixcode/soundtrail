@@ -86,11 +86,12 @@ Behavior:
 
 ### 5.2 Mini player (Spotify-like)
 
-- A thin mini player bar sits just above the navbar on Library, Speed, and Equalizer while a track is loaded. It shows artwork, title, play/pause, and next.
-- Tapping the mini player (not its buttons) opens the full Player screen.
-- Swiping the mini player left/right goes to next/previous track.
+The mini player is the navbar's expanded "island" state, not a separate bar:
 
-Note: while the navbar's compact strip is shown (section 5.1), the mini player is hidden, so the two never stack.
+- While a track is loaded and the user is on Library, Speed, or Equalizer, the island grows a now-playing row above the tabs. It shows artwork, title, artist, play/pause, and next.
+- Tapping the row (not its buttons) opens the full Player screen.
+- Swiping the row left/right goes to the next/previous track.
+- On the Player tab the island collapses back to tabs only.
 
 ### 5.3 Screens
 
@@ -100,7 +101,7 @@ Note: while the navbar's compact strip is shown (section 5.1), the mini player i
 4. **Equalizer**: on/off switch, preset picker, band sliders, save-preset button.
 5. **Settings** (opened from the Library gear icon): reset equalizer, reset speed, clear library cache, app version. Nothing else in v1.
 
-Layout rules: Android phone portrait first. Touch targets at least 48 dp. Text readable with the system font-size setting. The navbar and mini player respect the bottom safe-area inset.
+Layout rules: Android phone portrait first. Touch targets at least 48 dp. Text readable with the system font-size setting. The navbar respects the bottom safe-area inset. On wide screens (tablets) content is centered with a maximum width.
 
 ## 6. Non-goals (v1)
 

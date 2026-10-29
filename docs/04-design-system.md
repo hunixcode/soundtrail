@@ -32,13 +32,13 @@ Rules:
 
 ## 3. Typography
 
-Three font roles, each a single family from the Archivo superfamily plus one monospace for numbers.
+Three font roles from two families: Archivo for display and text, JetBrains Mono for numbers.
 
 | Role | Font | Used for |
 |------|------|----------|
 | Display | **Archivo** (variable, expanded width, weight 700–800) | Screen titles, the Speed readout, track title on Player |
 | Text | **Archivo** (variable, normal width, weight 400–600) | Body, list rows, labels, buttons |
-| Numeric | **Archivo** tabular figures, or a monospace fallback (for example IBM Plex Mono) if Archivo tabular figures are not sufficient for the Speed readout and timers | Timers, progress times, speed values |
+| Numeric | **JetBrains Mono** (weight 500) | Timers, progress times, speed values, band labels |
 
 Notes:
 
@@ -73,7 +73,7 @@ Text respects the system font scale, up to 200%. Layouts must not clip at that s
 | Component | Spec |
 |-----------|------|
 | Navbar (dynamic island) | Pill, `bg.raised`, 64 px tall, centered, 16 px from the bottom safe area. Four icon+label items. Active item shows its label and a `bg.sunken` capsule behind it. |
-| Mini player | 64 px tall, `bg.raised`, sits 8 px above the navbar. Artwork 40 px, title `type.body`, artist `fg.secondary`. |
+| Mini player | The island's expanded row: 60 px tall above the tabs. Artwork 40 px, title `type.bodyStrong`, artist `fg.secondary`. |
 | Play button (Player) | 72 px circle, `fg.primary` fill, `fg.inverse` icon. |
 | Secondary controls | 44 px touch target, `fg.primary` icons, no background. |
 | Slider (Speed, Equalizer) | 2 px track in `bg.sunken`, filled part in `fg.primary`, 24 px thumb (`fg.primary`, no border). |
@@ -104,7 +104,7 @@ Rules:
 
 ### 6.2 Signature transitions
 
-1. **Mini player → Player:** the artwork and title scale and move from the mini player into their positions on the Player (shared element style), over `motion.slow`. Remaining controls fade in over `motion.base` with a 100 ms delay. Closing reverses the same path.
+1. **Mini player → Player:** the island collapses with `motion.spring` while the Player artwork rises and scales in (24 px travel, 0.94 → 1) over `motion.slow`. A true shared-element transition is deferred; Reanimated's shared transitions only support the native stack.
 2. **Navbar pill:** the active indicator moves to the new tab with `motion.spring`. The label fades in and the previous label fades out over `motion.fast`.
 3. **Dynamic-island strip:** the navbar expands in width and height over `motion.spring` to show the now-playing strip; contents cross-fade over `motion.fast`. Collapsing is the same motion in reverse.
 4. **Screen change:** tab content cross-fades over `motion.base`. No horizontal slide between tabs.

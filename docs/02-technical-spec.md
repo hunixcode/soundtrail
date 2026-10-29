@@ -8,8 +8,8 @@
 | Language | TypeScript (strict mode) | Catches mistakes before they reach the phone. |
 | Navigation | `expo-router` | File-based routing that ships with Expo. |
 | UI | React Native core components plus a small in-house style layer; no UI kit in v1 | Keeps dependencies low. |
-| Local storage (settings, presets) | `expo-sqlite` or `@react-native-async-storage/async-storage` (pick one at setup; prefer the one Expo ships for the chosen SDK) | Persists EQ and speed settings and presets. |
-| Media file access | `expo-document-picker` (pick video/audio files) and `expo-media-library` (scan device audio/video) | Official Expo modules for file and media access. |
+| Local storage (settings, presets) | Android `SharedPreferences`, exposed by the audio module (`getPrefs` / `setPrefs`), validated in `src/state/prefs.ts` | No extra dependency; the native module already exists. |
+| Media file access | `expo-document-picker` (pick a video/audio file) and a MediaStore query in the audio module (scan device audio/video) | The scan needs only a few columns; doing it natively avoids another dependency. |
 | Playback and audio effects | **Custom Expo Module** (`modules/soundtrail-audio`) wrapping AndroidX Media3 (ExoPlayer) and the Android audio effects API | Only native code can give us a real equalizer and pitch-preserving speed. See section 3. |
 | Testing | Jest with `jest-expo` for JS logic; the native module has unit tests in Kotlin (JUnit) | Matches the Expo defaults. |
 | Build | EAS Build (Android APK/AAB) | Standard Expo build pipeline. |
@@ -50,12 +50,12 @@ Rules:
 
 ### 2.1 Navigation and shell
 
-- Routing with `expo-router`. The four main sections are the tabs of one layout: `app/(tabs)/library`, `app/(tabs)/player`, `app/(tabs)/speed`, `app/(tabs)/equalizer`. Settings is a stack screen (`app/settings`) pushed from the Library header.
-- The Player is a tab. The mini player and the Player tab share one "now playing" state, so they never disagree.
+- Routing with `expo-router` (routes live in `src/app/`). The four main sections are the tabs of one layout built with `expo-router/ui`: `src/app/(tabs)/index` (Library), `player`, `speed`, `equalizer`. Settings is a stack screen (`src/app/settings`) pushed from the Library header.
+- The Player is a tab. The island's now-playing row and the Player tab read one store (`src/state/app.ts`), so they never disagree.
 - The bottom navbar is a **custom tab bar** passed to the tabs layout, not the default Expo tab bar. It is built with `react-native-reanimated` for the pill and island animations, installed through `npx expo install` (rule 1 of section 4) and checked with the dependency rules.
 - The navbar's compact now-playing strip reads from the same now-playing state. It is hidden on the Player tab.
-- The mini player is a component rendered above the navbar. It is hidden when the navbar strip is visible (see product spec section 5.2).
-- Gesture handling for the mini player swipe uses `react-native-gesture-handler` (installed through `npx expo install`).
+- The mini player is the island's expanded state (see product spec section 5.2).
+- Gestures (sliders, island swipe) use `react-native-gesture-handler` v3 hooks; their callbacks run as worklets on the UI thread.
 
 ## 3. The audio engine (native module)
 
@@ -143,12 +143,12 @@ Do not request location, contacts, microphone, camera, or network-state permissi
 
 ```
 soundtrail/
-├── app/                       # expo-router screens
 ├── src/
-│   ├── components/            # dynamic-island navbar, mini player, track rows
+│   ├── app/                   # expo-router screens
+│   ├── components/            # dynamic-island navbar, sliders, track rows
 │   ├── audio/                 # TypeScript wrapper around the native module
-│   ├── state/                 # reducer, context, selectors
-│   ├── storage/               # settings and presets
+│   ├── state/                 # store, actions, prefs parsing
+│   ├── theme/                 # tokens and theme hooks
 │   └── library/               # scan and file-picking helpers
 ├── modules/
 │   └── soundtrail-audio/      # Expo Module: Kotlin + TypeScript bindings
