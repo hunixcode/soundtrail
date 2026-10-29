@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { ActivityIndicator, FlatList, Linking, StyleSheet, TextInput, View } from 'react-native';
+import { ActivityIndicator, FlatList, Linking, StyleSheet, TextInput, View, useWindowDimensions } from 'react-native';
 import { router, useFocusEffect } from 'expo-router';
 
 import type { LibraryItem } from '../../../modules/soundtrail-audio';
@@ -9,14 +9,17 @@ import { useIslandMetrics } from '../../components/IslandNav';
 import { PressableScale } from '../../components/PressableScale';
 import { Screen } from '../../components/Screen';
 import { TrackRow } from '../../components/TrackRow';
+import { TrackTile } from '../../components/TrackTile';
 import { Txt } from '../../components/Txt';
 import { filterLibrary } from '../../library/format';
 import { appendTracks, findTracks, type OnlineTrack } from '../../online/audius';
-import { pickFile, playList, refreshLibrary, rememberArtwork, scanLibrary, useApp } from '../../state/app';
+import { pickFile, playList, refreshLibrary, rememberArtwork, scanLibrary, setLibraryView, useApp } from '../../state/app';
 import { useColors } from '../../theme/useTheme';
 import { layout, radius, space, type } from '../../theme/tokens';
 
 type Filter = 'device' | 'online';
+
+const TILE_MIN = 150;
 
 const FILTERS: { id: Filter; label: string }[] = [
   { id: 'device', label: 'On device' },
@@ -100,11 +103,21 @@ export default function LibraryScreen() {
     playList(items, Math.max(0, items.indexOf(item)));
   }, [items]);
 
+  const view = useApp((s) => s.prefs.libraryView);
+  const { width } = useWindowDimensions();
+  const grid = view === 'grid';
+  const inner = Math.min(width, layout.maxContentWidth) - layout.gutter * 2;
+  const columns = Math.max(2, Math.floor((inner + space.lg) / (TILE_MIN + space.lg)));
+  const tile = Math.floor((inner - space.lg * (columns - 1)) / columns);
+
   const renderItem = useCallback(
-    ({ item }: { item: LibraryItem }) => (
-      <TrackRow item={item} active={item.id === mediaId} playing={playing} onPress={onPress} />
-    ),
-    [mediaId, playing, onPress],
+    ({ item }: { item: LibraryItem }) =>
+      grid ? (
+        <TrackTile item={item} size={tile} active={item.id === mediaId} playing={playing} onPress={onPress} />
+      ) : (
+        <TrackRow item={item} active={item.id === mediaId} playing={playing} onPress={onPress} />
+      ),
+    [grid, tile, mediaId, playing, onPress],
   );
 
   return (
@@ -114,6 +127,13 @@ export default function LibraryScreen() {
           Library
         </Txt>
         <View style={styles.headerActions}>
+          <PressableScale
+            onPress={() => setLibraryView(grid ? 'list' : 'grid')}
+            accessibilityLabel={grid ? 'Show as list' : 'Show as grid'}
+            style={styles.iconButton}
+          >
+            <Icon name={grid ? 'list' : 'grid'} size={22} />
+          </PressableScale>
           <PressableScale onPress={pickFile} accessibilityLabel="Open an audio file" style={styles.iconButton}>
             <Icon name="folder" size={22} />
           </PressableScale>
@@ -180,10 +200,13 @@ export default function LibraryScreen() {
         <Empty icon="alert-circle" title="Could not read your library" body="Try again in a moment." action="Retry" onAction={() => scanLibrary()} />
       ) : (
         <FlatList
+          key={grid ? `grid:${columns}` : 'list'}
           data={items}
           keyExtractor={(item) => item.id}
           renderItem={renderItem}
-          contentContainerStyle={{ paddingBottom: reserve }}
+          numColumns={grid ? columns : 1}
+          columnWrapperStyle={grid ? styles.gridRow : undefined}
+          contentContainerStyle={[grid && styles.grid, { paddingBottom: reserve }]}
           keyboardShouldPersistTaps="handled"
           onEndReached={online ? remote.more : undefined}
           onEndReachedThreshold={0.6}
@@ -268,6 +291,8 @@ const styles = StyleSheet.create({
     paddingBottom: space.md,
   },
   headerActions: { flexDirection: 'row', gap: space.xs },
+  grid: { gap: space.xl, paddingTop: space.xs },
+  gridRow: { gap: space.lg, paddingHorizontal: layout.gutter },
   iconButton: { width: 44, height: 44, alignItems: 'center', justifyContent: 'center' },
   search: {
     marginHorizontal: layout.gutter,
