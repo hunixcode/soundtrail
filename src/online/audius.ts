@@ -23,7 +23,6 @@ export function toOnlineTrack(track: AudiusTrack): OnlineTrack {
     artist: track.user?.name ?? null,
     album: null,
     durationMs: Math.round(track.duration * 1000),
-    kind: 'audio',
     artworkUrl: track.artwork?.['480x480'] ?? track.artwork?.['150x150'] ?? null,
   };
 }

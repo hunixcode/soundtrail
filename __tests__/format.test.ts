@@ -9,7 +9,6 @@ const item = (title: string, artist: string | null, album: string | null): Libra
   artist,
   album,
   durationMs: 1000,
-  kind: 'audio',
 });
 
 describe('format', () => {
@@ -24,7 +23,6 @@ describe('format', () => {
   it('builds subtitles', () => {
     expect(subtitle(item('a', 'Artist', 'Album'))).toBe('Artist · Album');
     expect(subtitle(item('a', null, null))).toBe('Unknown artist');
-    expect(subtitle({ artist: null, album: null, kind: 'video' })).toBe('Video');
   });
 
   it('filters by title, artist or album, ignoring case', () => {

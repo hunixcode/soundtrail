@@ -2,7 +2,7 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import { ActivityIndicator, FlatList, Linking, StyleSheet, TextInput, View } from 'react-native';
 import { router } from 'expo-router';
 
-import type { LibraryItem, MediaKind } from '../../../modules/soundtrail-audio';
+import type { LibraryItem } from '../../../modules/soundtrail-audio';
 import { Chip } from '../../components/Chip';
 import { Icon } from '../../components/Icon';
 import { useIslandMetrics } from '../../components/IslandNav';
@@ -16,12 +16,10 @@ import { pickFile, playList, rememberArtwork, scanLibrary, useApp } from '../../
 import { useColors } from '../../theme/useTheme';
 import { layout, radius, space, type } from '../../theme/tokens';
 
-type Filter = 'all' | MediaKind | 'online';
+type Filter = 'device' | 'online';
 
 const FILTERS: { id: Filter; label: string }[] = [
-  { id: 'all', label: 'All' },
-  { id: 'audio', label: 'Music' },
-  { id: 'video', label: 'Videos' },
+  { id: 'device', label: 'On device' },
   { id: 'online', label: 'Online' },
 ];
 
@@ -59,7 +57,7 @@ export default function LibraryScreen() {
   const mediaId = useApp((s) => s.status.mediaId);
   const playing = useApp((s) => s.status.isPlaying);
   const [query, setQuery] = useState('');
-  const [filter, setFilter] = useState<Filter>('all');
+  const [filter, setFilter] = useState<Filter>('device');
   const [attempt, setAttempt] = useState(0);
   const online = filter === 'online';
   const remote = useOnlineTracks(online, query.trim(), attempt);
@@ -70,10 +68,8 @@ export default function LibraryScreen() {
 
   const items = useMemo(() => {
     if (online) return remote.items;
-    const all = [...picked, ...library];
-    const byKind = filter === 'all' ? all : all.filter((item) => item.kind === filter);
-    return filterLibrary(byKind, query);
-  }, [library, picked, filter, query, online, remote.items]);
+    return filterLibrary([...picked, ...library], query);
+  }, [library, picked, query, online, remote.items]);
 
   const onPress = useCallback((item: LibraryItem) => {
     playList(items, Math.max(0, items.indexOf(item)));
@@ -93,8 +89,8 @@ export default function LibraryScreen() {
           Library
         </Txt>
         <View style={styles.headerActions}>
-          <PressableScale onPress={pickFile} accessibilityLabel="Open a video or audio file" style={styles.iconButton}>
-            <Icon name="film" size={22} />
+          <PressableScale onPress={pickFile} accessibilityLabel="Open an audio file" style={styles.iconButton}>
+            <Icon name="folder" size={22} />
           </PressableScale>
           <PressableScale onPress={() => router.push('/settings')} accessibilityLabel="Settings" style={styles.iconButton}>
             <Icon name="settings" size={22} />
@@ -149,7 +145,7 @@ export default function LibraryScreen() {
         <Empty
           icon="lock"
           title="Allow access to your music"
-          body="soundtrail needs permission to read audio and video files on this device. Nothing leaves your device."
+          body="soundtrail needs permission to read audio files on this device. Nothing leaves your device."
           action="Allow access"
           onAction={() => scanLibrary()}
           secondary="Open system settings"
@@ -173,7 +169,7 @@ export default function LibraryScreen() {
               <Empty
                 icon={query ? 'search' : 'music'}
                 title={query ? 'No matches' : 'No files yet'}
-                body={query ? 'Try a different search.' : 'Add music or videos to this device, or open a file directly.'}
+                body={query ? 'Try a different search.' : 'Add music to this device, or open a file directly.'}
                 action={query ? undefined : 'Open a file'}
                 onAction={query ? undefined : pickFile}
               />

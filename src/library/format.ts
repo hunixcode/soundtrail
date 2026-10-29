@@ -8,8 +8,7 @@ export function formatTime(ms: number): string {
   return hours > 0 ? `${hours}:${String(minutes).padStart(2, '0')}:${seconds}` : `${minutes}:${seconds}`;
 }
 
-export function subtitle(item: Pick<LibraryItem, 'artist' | 'album' | 'kind'>): string {
-  if (item.kind === 'video') return 'Video';
+export function subtitle(item: Pick<LibraryItem, 'artist' | 'album'>): string {
   return [item.artist, item.album].filter(Boolean).join(' · ') || 'Unknown artist';
 }
 

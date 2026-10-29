@@ -46,7 +46,7 @@ const IDLE_STATUS: PlaybackStatus = {
 export const ERROR_MESSAGES: Record<PlaybackErrorCode | 'EQ_UNAVAILABLE' | 'PICK_FAILED', string> = {
   UNSUPPORTED_FORMAT: 'This file format is not supported.',
   CORRUPT_FILE: 'This file looks damaged and cannot be played.',
-  NO_AUDIO_TRACK: 'This video has no audio track.',
+  NO_AUDIO_TRACK: 'This file has no audio track.',
   IO_ERROR: 'This could not be read. The file may have moved, or the connection dropped.',
   PLAYBACK_ERROR: 'Playback stopped because of an error.',
   EQ_UNAVAILABLE: 'Equalizer not available on this device.',
@@ -135,7 +135,6 @@ export async function scanLibrary(ask = true) {
   store.set({ libraryStatus: 'loading' });
   const modern = Number(Platform.Version) >= 33;
   const P = PermissionsAndroid.PERMISSIONS;
-  const wanted = modern ? [P.READ_MEDIA_AUDIO, P.READ_MEDIA_VIDEO] : [P.READ_EXTERNAL_STORAGE];
   const required = modern ? P.READ_MEDIA_AUDIO : P.READ_EXTERNAL_STORAGE;
   try {
     if (!(await hasPermission(required))) {
@@ -143,8 +142,8 @@ export async function scanLibrary(ask = true) {
         store.set({ libraryStatus: 'denied' });
         return;
       }
-      const result = await PermissionsAndroid.requestMultiple(wanted);
-      if (result[required] !== PermissionsAndroid.RESULTS.GRANTED) {
+      const result = await PermissionsAndroid.request(required);
+      if (result !== PermissionsAndroid.RESULTS.GRANTED) {
         store.set({ libraryStatus: 'denied' });
         return;
       }
@@ -308,7 +307,7 @@ export async function loadArtwork(uri: string) {
 
 export async function pickFile() {
   const result = await DocumentPicker.getDocumentAsync({
-    type: ['video/*', 'audio/*'],
+    type: 'audio/*',
     copyToCacheDirectory: false,
   });
   if (result.canceled || !result.assets[0]) return;
@@ -326,7 +325,6 @@ export async function pickFile() {
       artist: info.artist,
       album: null,
       durationMs: info.durationMs,
-      kind: info.kind,
     };
     store.set((s) => ({ picked: [item, ...s.picked.filter((p) => p.uri !== item.uri)] }));
     await playList([item], 0);

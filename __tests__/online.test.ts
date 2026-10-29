@@ -60,7 +60,6 @@ describe('online', () => {
       title: 'Song',
       artist: 'Artist',
       durationMs: 71400,
-      kind: 'audio',
       artworkUrl: 'https://img/150.jpg',
     });
     expect(track.uri).toContain('/tracks/Ab%201/stream?app_name=');

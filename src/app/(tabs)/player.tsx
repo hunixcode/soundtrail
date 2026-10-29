@@ -132,7 +132,7 @@ export default function PlayerScreen() {
           </View>
           <Txt variant="headline">Nothing playing</Txt>
           <Txt tone="secondary" style={styles.centerText}>
-            Pick a song or a video from your library.
+            Pick a song from your library.
           </Txt>
           <PressableScale onPress={() => router.navigate('/')} style={[styles.primary, { backgroundColor: colors.fgPrimary }]}>
             <Txt variant="bodyStrong" tone="inverse">

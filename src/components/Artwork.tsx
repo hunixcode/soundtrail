@@ -8,7 +8,7 @@ import { useColors } from '../theme/useTheme';
 import { radius } from '../theme/tokens';
 import { Icon } from './Icon';
 
-export function Artwork({ item, size }: { item: Pick<LibraryItem, 'uri' | 'kind'> | null; size: number }) {
+export function Artwork({ item, size }: { item: Pick<LibraryItem, 'uri'> | null; size: number }) {
   const colors = useColors();
   const uri = item?.uri;
   const source = useApp((s) => (uri ? s.artwork[uri] : null));
@@ -28,7 +28,7 @@ export function Artwork({ item, size }: { item: Pick<LibraryItem, 'uri' | 'kind'
           <Image source={{ uri: source }} style={StyleSheet.absoluteFill} resizeMode="cover" />
         </Animated.View>
       ) : (
-        <Icon name={item?.kind === 'video' ? 'film' : 'music'} size={Math.max(16, Math.round(size * 0.32))} color="fgTertiary" />
+        <Icon name="music" size={Math.max(16, Math.round(size * 0.32))} color="fgTertiary" />
       )}
     </View>
   );
