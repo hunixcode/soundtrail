@@ -19,6 +19,7 @@ describe('parsePrefs', () => {
       theme: 'light' as const,
       shuffle: true,
       repeat: 'one' as const,
+      libraryView: 'grid' as const,
     };
     expect(parsePrefs(JSON.stringify(saved))).toEqual(saved);
   });
@@ -30,6 +31,7 @@ describe('parsePrefs', () => {
         eqGains: [1, 'x', null, 2],
         theme: 'neon',
         repeat: 'sometimes',
+        libraryView: 'mosaic',
         userPresets: [
           { id: 'a', name: '  ', curve: [{ hz: 60, db: 1 }] },
           { id: 'b', name: 'ok', curve: [{ hz: -5, db: 1 }] },
@@ -41,6 +43,7 @@ describe('parsePrefs', () => {
     expect(parsed.eqGains).toEqual([1, 2]);
     expect(parsed.theme).toBe('system');
     expect(parsed.repeat).toBe('off');
+    expect(parsed.libraryView).toBe('list');
     expect(parsed.userPresets).toEqual([{ id: 'c', name: 'good', builtIn: false, curve: [{ hz: 100, db: 2 }] }]);
   });
 });

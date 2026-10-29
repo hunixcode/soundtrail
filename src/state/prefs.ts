@@ -3,6 +3,7 @@ import { clampSpeed } from '../audio/speed';
 import type { CurvePoint, Preset } from '../audio/presets';
 
 export type ThemePreference = 'system' | 'dark' | 'light';
+export type LibraryView = 'list' | 'grid';
 
 export type Prefs = {
   speed: number;
@@ -13,6 +14,7 @@ export type Prefs = {
   theme: ThemePreference;
   shuffle: boolean;
   repeat: RepeatMode;
+  libraryView: LibraryView;
 };
 
 export const DEFAULT_PREFS: Prefs = {
@@ -24,6 +26,7 @@ export const DEFAULT_PREFS: Prefs = {
   theme: 'system',
   shuffle: false,
   repeat: 'off',
+  libraryView: 'list',
 };
 
 const isRecord = (value: unknown): value is Record<string, unknown> =>
@@ -68,5 +71,6 @@ export function parsePrefs(json: string | null): Prefs {
     theme: raw.theme === 'dark' || raw.theme === 'light' || raw.theme === 'system' ? raw.theme : DEFAULT_PREFS.theme,
     shuffle: typeof raw.shuffle === 'boolean' ? raw.shuffle : DEFAULT_PREFS.shuffle,
     repeat: raw.repeat === 'all' || raw.repeat === 'one' || raw.repeat === 'off' ? raw.repeat : DEFAULT_PREFS.repeat,
+    libraryView: raw.libraryView === 'grid' || raw.libraryView === 'list' ? raw.libraryView : DEFAULT_PREFS.libraryView,
   };
 }

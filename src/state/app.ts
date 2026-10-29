@@ -12,7 +12,7 @@ import Audio, {
 import { BUILT_IN_PRESETS, clampGain, curveFromBands, gainsForBands, type Preset } from '../audio/presets';
 import { clampSpeed } from '../audio/speed';
 import { createStore, useStore } from './createStore';
-import { DEFAULT_PREFS, parsePrefs, type Prefs, type ThemePreference } from './prefs';
+import { DEFAULT_PREFS, parsePrefs, type LibraryView, type Prefs, type ThemePreference } from './prefs';
 
 export type LibraryStatus = 'idle' | 'loading' | 'ready' | 'denied' | 'error';
 
@@ -289,6 +289,10 @@ export const resetSpeed = () => setSpeed(1);
 
 export function setTheme(theme: ThemePreference) {
   updatePrefs({ theme });
+}
+
+export function setLibraryView(libraryView: LibraryView) {
+  updatePrefs({ libraryView });
 }
 
 export async function clearLibraryCache() {
