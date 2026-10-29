@@ -16,6 +16,7 @@ import { scheduleOnRN } from 'react-native-worklets';
 
 import { currentItem, next, previous, togglePlay, useApp } from '../state/app';
 import { rememberTab, type TabName } from '../state/nav';
+import { subtitle } from '../library/format';
 import { useColors } from '../theme/useTheme';
 import { layout, motion, radius, space } from '../theme/tokens';
 import { Artwork } from './Artwork';
@@ -131,7 +132,7 @@ function NowPlayingStrip() {
               {item?.title ?? 'Now playing'}
             </Txt>
             <Txt variant="caption" tone="secondary" numberOfLines={1}>
-              {item?.artist ?? (item?.kind === 'video' ? 'Video' : 'Unknown artist')}
+              {item ? subtitle(item) : ''}
             </Txt>
           </View>
         </Animated.View>
