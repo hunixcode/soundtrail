@@ -227,6 +227,12 @@ function applyGains(gains: number[], activePresetId: string | null) {
   return Audio.setEqGains(gains);
 }
 
+export function previewBandGain(index: number, db: number) {
+  const band = store.get().equalizer.bands[index];
+  if (!band) return;
+  return Audio.setEqBandGain(index, clampGain(band, db));
+}
+
 export function setBandGain(index: number, db: number) {
   const { bands } = store.get().equalizer;
   const band = bands[index];

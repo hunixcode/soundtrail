@@ -1,6 +1,6 @@
-import { useState } from 'react';
+import { memo, useCallback, useEffect, useState } from 'react';
 import { Alert, ScrollView, StyleSheet, TextInput, View } from 'react-native';
-import Animated, { FadeIn, FadeOut, useAnimatedStyle, withTiming } from 'react-native-reanimated';
+import Animated, { FadeIn, FadeOut, useAnimatedStyle, useSharedValue, withTiming } from 'react-native-reanimated';
 
 import type { EqBand } from '../../../modules/soundtrail-audio';
 import { Chip } from '../../components/Chip';
@@ -17,6 +17,7 @@ import {
   allPresets,
   applyPreset,
   deletePreset,
+  previewBandGain,
   savePreset,
   setBandGain,
   setEqEnabled,
@@ -26,6 +27,8 @@ import { useColors } from '../../theme/useTheme';
 import { layout, motion, radius, space, type } from '../../theme/tokens';
 
 const GAIN_STEP = 0.5;
+
+const formatDb = (db: number) => `${db > 0 ? '+' : ''}${db.toFixed(1)}`;
 
 export default function EqualizerScreen() {
   const colors = useColors();
@@ -37,7 +40,11 @@ export default function EqualizerScreen() {
   const [naming, setNaming] = useState(false);
   const [name, setName] = useState('');
 
-  const dim = useAnimatedStyle(() => ({ opacity: withTiming(equalizer.enabled ? 1 : 0.4, motion.base) }));
+  const opacity = useSharedValue(equalizer.enabled ? 1 : 0.4);
+  useEffect(() => {
+    opacity.set(withTiming(equalizer.enabled ? 1 : 0.4, motion.base));
+  }, [equalizer.enabled, opacity]);
+  const dim = useAnimatedStyle(() => ({ opacity: opacity.value }));
 
   const onSave = () => {
     if (savePreset(name)) {
@@ -138,12 +145,29 @@ export default function EqualizerScreen() {
   );
 }
 
-function BandSlider({ band }: { band: EqBand }) {
+const BandSlider = memo(function BandSlider({ band }: { band: EqBand }) {
   const range = band.maxDb - band.minDb;
   const steps = Math.max(1, Math.round(range / GAIN_STEP));
+  const [live, setLive] = useState<number | null>(null);
+  const db = live ?? band.gainDb;
   const ratio = range > 0 ? (band.gainDb - band.minDb) / range : 0.5;
-  const db = band.gainDb;
-  const label = `${db > 0 ? '+' : ''}${db.toFixed(1)}`;
+  const label = formatDb(db);
+  const { index, minDb } = band;
+  const toDb = useCallback((r: number) => Math.round((minDb + r * range) / GAIN_STEP) * GAIN_STEP, [minDb, range]);
+  const onChange = useCallback(
+    (r: number) => {
+      setLive(toDb(r));
+      previewBandGain(index, toDb(r));
+    },
+    [index, toDb],
+  );
+  const onCommit = useCallback(
+    (r: number) => {
+      setBandGain(index, toDb(r));
+      setLive(null);
+    },
+    [index, toDb],
+  );
 
   return (
     <View style={styles.band}>
@@ -156,9 +180,10 @@ function BandSlider({ band }: { band: EqBand }) {
           value={ratio}
           steps={steps}
           thickness={4}
-          onChange={(r) => setBandGain(band.index, band.minDb + r * range)}
+          onChange={onChange}
+          onCommit={onCommit}
           label={`${formatHz(band.centerHz)} hertz band`}
-          valueText={`${label} decibels`}
+          valueText={`${formatDb(band.gainDb)} decibels`}
         />
       </View>
       <Txt variant="mono" tone="secondary">
@@ -166,7 +191,7 @@ function BandSlider({ band }: { band: EqBand }) {
       </Txt>
     </View>
   );
-}
+});
 
 const styles = StyleSheet.create({
   content: { paddingHorizontal: layout.gutter, paddingTop: space.lg, gap: space.xl },
