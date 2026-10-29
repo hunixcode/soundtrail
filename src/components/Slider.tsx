@@ -14,6 +14,7 @@ type Props = {
   onCommit?: (ratio: number) => void;
   vertical?: boolean;
   thickness?: number;
+  thumbSize?: number;
   label: string;
   valueText: string;
 };
@@ -27,6 +28,7 @@ export const Slider = memo(function Slider({
   onCommit,
   vertical = false,
   thickness = 2,
+  thumbSize = THUMB,
   label,
   valueText,
 }: Props) {
@@ -85,7 +87,7 @@ export const Slider = memo(function Slider({
     return vertical ? { transform: [{ translateY: hidden }] } : { transform: [{ translateX: -hidden }] };
   });
   const thumb = useAnimatedStyle(() => {
-    const offset = progress.value * size.value - THUMB / 2;
+    const offset = progress.value * size.value - thumbSize / 2;
     const scale = grip.value;
     return vertical
       ? { transform: [{ translateY: -offset }, { scale }] }
@@ -131,6 +133,7 @@ export const Slider = memo(function Slider({
             styles.thumb,
             vertical ? styles.thumbVertical : styles.thumbHorizontal,
             { backgroundColor: colors.fgPrimary },
+            thumbSize !== THUMB && { width: thumbSize, height: thumbSize, borderRadius: thumbSize / 2, top: vertical ? undefined : (48 - thumbSize) / 2 },
             thumb,
           ]}
         />
