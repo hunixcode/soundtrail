@@ -1,16 +1,8 @@
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect } from 'react';
 import { StyleSheet, View, useWindowDimensions, type LayoutChangeEvent } from 'react-native';
 import { useTabTrigger } from 'expo-router/ui';
 import { GestureDetector, usePanGesture, useTapGesture, useExclusiveGestures } from 'react-native-gesture-handler';
-import Animated, {
-  FadeIn,
-  FadeOut,
-  LinearTransition,
-  useAnimatedStyle,
-  useSharedValue,
-  withSpring,
-  withTiming,
-} from 'react-native-reanimated';
+import Animated, { useAnimatedStyle, useSharedValue, withSpring, type SharedValue } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { scheduleOnRN } from 'react-native-worklets';
 
@@ -32,6 +24,8 @@ export const TABS: { name: TabName; label: string; icon: IconName }[] = [
 ];
 
 const STRIP_HEIGHT = 60;
+const TAB_COMPACT = 52;
+const TAB_ROW_PADDING = space.sm;
 
 export function useIslandMetrics(onPlayer: boolean) {
   const insets = useSafeAreaInsets();
@@ -42,45 +36,76 @@ export function useIslandMetrics(onPlayer: boolean) {
 }
 
 type TabItemProps = (typeof TABS)[number] & {
-  onMeasure: (name: TabName, x: number, w: number) => void;
-  onFocus: (name: TabName) => void;
+  index: number;
+  nav: SharedValue<Nav>;
+  progress: SharedValue<number>;
+  labelWidths: SharedValue<number[]>;
+  onFocus: (index: number) => void;
 };
 
-function TabItem({ name, label, icon, onMeasure, onFocus }: TabItemProps) {
+type Nav = { from: number; to: number };
+
+function weight(nav: Nav, t: number, index: number) {
+  'worklet';
+  if (index === nav.to) return nav.from === nav.to ? 1 : t;
+  return index === nav.from ? 1 - t : 0;
+}
+
+function tabWidth(nav: Nav, t: number, index: number, labelWidths: number[]) {
+  'worklet';
+  return TAB_COMPACT + ((labelWidths[index] ?? 0) + space.sm) * weight(nav, t, index);
+}
+
+function TabItem({ name, label, icon, index, nav, progress, labelWidths, onFocus }: TabItemProps) {
   const { trigger, triggerProps } = useTabTrigger({ name });
   const focused = trigger?.isFocused ?? false;
 
   useEffect(() => {
     if (!focused) return;
     rememberTab(name);
-    onFocus(name);
-  }, [focused, name, onFocus]);
+    onFocus(index);
+  }, [focused, name, index, onFocus]);
+
+  const box = useAnimatedStyle(() => ({ width: tabWidth(nav.value, progress.value, index, labelWidths.value) }));
+  const text = useAnimatedStyle(() => {
+    const w = weight(nav.value, progress.value, index);
+    return { opacity: w * w, transform: [{ translateX: (1 - w) * -space.sm }] };
+  });
+  const glyph = useAnimatedStyle(() => ({ opacity: 0.65 + 0.35 * weight(nav.value, progress.value, index) }));
+
+  const onLabelLayout = (e: LayoutChangeEvent) => {
+    const width = Math.ceil(e.nativeEvent.layout.width);
+    labelWidths.modify((widths) => {
+      'worklet';
+      widths[index] = width;
+      return widths;
+    });
+  };
 
   return (
-    <Animated.View
-      layout={LinearTransition.duration(motion.base.duration)}
-      onLayout={(e: LayoutChangeEvent) => onMeasure(name, e.nativeEvent.layout.x, e.nativeEvent.layout.width)}
-    >
+    <Animated.View style={[styles.tabBox, box]}>
       <PressableScale
         onPress={triggerProps.onPress}
         onLongPress={triggerProps.onLongPress}
         accessibilityRole="tab"
         accessibilityLabel={label}
         accessibilityState={{ selected: focused }}
-        style={[styles.tab, focused && styles.tabActive]}
+        style={styles.tab}
       >
-        <Icon name={icon} size={20} color={focused ? 'fgPrimary' : 'fgSecondary'} />
-        {focused ? (
-          <Animated.View entering={FadeIn.duration(motion.fast.duration)} exiting={FadeOut.duration(motion.fast.duration)}>
-            <Txt variant="label">{label}</Txt>
-          </Animated.View>
-        ) : null}
+        <Animated.View style={glyph}>
+          <Icon name={icon} size={20} />
+        </Animated.View>
+        <Animated.View style={[styles.label, text]}>
+          <Txt variant="label" numberOfLines={1} onLayout={onLabelLayout}>
+            {label}
+          </Txt>
+        </Animated.View>
       </PressableScale>
     </Animated.View>
   );
 }
 
-function NowPlayingStrip() {
+function NowPlayingStrip({ open }: { open: SharedValue<number> }) {
   const colors = useColors();
   const item = useApp(currentItem);
   const playing = useApp((s) => s.status.playWhenReady);
@@ -113,12 +138,10 @@ function NowPlayingStrip() {
     opacity: 1 - Math.min(0.6, Math.abs(offset.value) / 160),
   }));
 
+  const reveal = useAnimatedStyle(() => ({ opacity: open.value * open.value }));
+
   return (
-    <Animated.View
-      entering={FadeIn.duration(motion.fast.duration).delay(80)}
-      exiting={FadeOut.duration(motion.fast.duration)}
-      style={[styles.strip, { borderBottomColor: colors.borderSubtle }]}
-    >
+    <Animated.View style={[styles.strip, { borderBottomColor: colors.borderSubtle }, reveal]}>
       <GestureDetector gesture={gesture}>
         <Animated.View
           style={[styles.stripMain, slide]}
@@ -152,46 +175,54 @@ export function IslandNav() {
   const { width } = useWindowDimensions();
   const { trigger: playerTrigger } = useTabTrigger({ name: 'player' });
   const onPlayer = playerTrigger?.isFocused ?? false;
-  const { expanded, height, bottom } = useIslandMetrics(onPlayer);
-  const [frames, setFrames] = useState<Partial<Record<TabName, { x: number; w: number }>>>({});
+  const hasTrack = useApp((s) => s.status.index >= 0);
+  const { expanded, bottom } = useIslandMetrics(onPlayer);
 
   const collapsedWidth = Math.min(width - layout.gutter * 2, 380);
   const expandedWidth = Math.min(width - layout.gutter * 2, 520);
-  const islandWidth = useSharedValue(expanded ? expandedWidth : collapsedWidth);
-  const islandHeight = useSharedValue(height);
+  const open = useSharedValue(expanded ? 1 : 0);
+  const nav = useSharedValue<Nav>({ from: -1, to: -1 });
+  const progress = useSharedValue(1);
+  const labelWidths = useSharedValue<number[]>(TABS.map(() => 0));
 
   useEffect(() => {
-    islandWidth.set(withSpring(expanded ? expandedWidth : collapsedWidth, motion.spring));
-    islandHeight.set(withSpring(height, motion.spring));
-  }, [expanded, expandedWidth, collapsedWidth, height, islandWidth, islandHeight]);
+    open.set(withSpring(expanded ? 1 : 0, motion.spring));
+  }, [expanded, open]);
 
-  const container = useAnimatedStyle(() => ({ width: islandWidth.value, height: islandHeight.value }));
+  const onFocus = useCallback(
+    (index: number) => {
+      const { from, to } = nav.value;
+      if (to < 0) {
+        nav.set({ from: index, to: index });
+        return;
+      }
+      nav.set({ from: progress.value < 0.5 ? from : to, to: index });
+      progress.set(0);
+      progress.set(withSpring(1, motion.spring));
+    },
+    [nav, progress],
+  );
 
-  const indicatorX = useSharedValue(0);
-  const indicatorW = useSharedValue(0);
-  const [active, setActive] = useState<TabName>('library');
-
-  const onMeasure = (name: TabName, x: number, w: number) => {
-    setFrames((f) => (f[name]?.x === x && f[name]?.w === w ? f : { ...f, [name]: { x, w } }));
-  };
-
-  useEffect(() => {
-    const frame = frames[active];
-    if (!frame) return;
-    if (indicatorW.value === 0) {
-      indicatorX.set(frame.x);
-      indicatorW.set(frame.w);
-    } else {
-      indicatorX.set(withSpring(frame.x, motion.spring));
-      indicatorW.set(withSpring(frame.w, motion.spring));
-    }
-  }, [active, frames, indicatorX, indicatorW]);
-
-  const indicator = useAnimatedStyle(() => ({
-    width: indicatorW.value,
-    transform: [{ translateX: indicatorX.value }],
-    opacity: withTiming(indicatorW.value > 0 ? 1 : 0, motion.fast),
+  const container = useAnimatedStyle(() => ({
+    width: collapsedWidth + (expandedWidth - collapsedWidth) * open.value,
+    height: layout.navHeight + STRIP_HEIGHT * open.value,
   }));
+
+  const indicator = useAnimatedStyle(() => {
+    const { from, to } = nav.value;
+    const t = progress.value;
+    const islandWidth = collapsedWidth + (expandedWidth - collapsedWidth) * open.value;
+    const inner = islandWidth - StyleSheet.hairlineWidth * 2 - TAB_ROW_PADDING * 2;
+    const widths = TABS.map((_, i) => tabWidth(nav.value, t, i, labelWidths.value));
+    const gap = (inner - widths.reduce((sum, w) => sum + w, 0)) / (TABS.length - 1);
+    const lefts = widths.map((_, i) => TAB_ROW_PADDING + widths.slice(0, i).reduce((sum, w) => sum + w + gap, 0));
+    if (to < 0) return { opacity: 0 };
+    return {
+      opacity: 1,
+      width: widths[from] + (widths[to] - widths[from]) * t,
+      transform: [{ translateX: lefts[from] + (lefts[to] - lefts[from]) * t }],
+    };
+  });
 
   return (
     <View pointerEvents="box-none" style={[StyleSheet.absoluteFill, styles.anchor, { paddingBottom: bottom }]}>
@@ -202,11 +233,23 @@ export function IslandNav() {
           container,
         ]}
       >
-        {expanded ? <NowPlayingStrip /> : null}
+        {hasTrack ? (
+          <View pointerEvents={expanded ? 'auto' : 'none'}>
+            <NowPlayingStrip open={open} />
+          </View>
+        ) : null}
         <View style={styles.tabs}>
           <Animated.View style={[styles.indicator, { backgroundColor: colors.bgSunken }, indicator]} />
-          {TABS.map((tab) => (
-            <TabItem key={tab.name} {...tab} onMeasure={onMeasure} onFocus={setActive} />
+          {TABS.map((tab, index) => (
+            <TabItem
+              key={tab.name}
+              {...tab}
+              index={index}
+              nav={nav}
+              progress={progress}
+              labelWidths={labelWidths}
+              onFocus={onFocus}
+            />
           ))}
         </View>
       </Animated.View>
@@ -238,18 +281,15 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    paddingHorizontal: space.sm,
+    paddingHorizontal: TAB_ROW_PADDING,
   },
   indicator: { position: 'absolute', left: 0, height: 48, borderRadius: radius.pill },
+  tabBox: { height: 48, borderRadius: radius.pill, overflow: 'hidden' },
   tab: {
     height: 48,
-    minWidth: 48,
-    paddingHorizontal: space.md,
-    borderRadius: radius.pill,
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'center',
-    gap: space.sm,
+    paddingLeft: (TAB_COMPACT - 20) / 2,
   },
-  tabActive: { paddingHorizontal: space.lg },
+  label: { position: 'absolute', left: (TAB_COMPACT - 20) / 2 + 20 + space.sm, width: 160, alignItems: 'flex-start' },
 });
