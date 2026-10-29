@@ -1,10 +1,16 @@
 package expo.modules.soundtrailaudio
 
+import android.app.Activity
+import android.app.PendingIntent
+import android.app.RecoverableSecurityException
 import android.content.ComponentName
+import android.content.ContentValues
 import android.content.Context
 import android.net.Uri
+import android.os.Build
 import android.os.Handler
 import android.os.Looper
+import android.provider.MediaStore
 import androidx.media3.common.C
 import androidx.media3.common.MediaItem
 import androidx.media3.common.MediaMetadata
@@ -16,6 +22,8 @@ import androidx.media3.exoplayer.ExoPlayer
 import androidx.media3.session.MediaController
 import androidx.media3.session.SessionToken
 import com.google.common.util.concurrent.ListenableFuture
+import expo.modules.kotlin.Promise
+import expo.modules.kotlin.exception.CodedException
 import expo.modules.kotlin.exception.Exceptions
 import expo.modules.kotlin.functions.Queues
 import expo.modules.kotlin.modules.Module
@@ -40,8 +48,11 @@ class QueueItem : Record {
   val artworkUri: String? = null
 }
 
+class FileEditException(message: String) : CodedException("FILE_EDIT_FAILED", message, null)
+
 class SoundtrailAudioModule : Module() {
   private val handler = Handler(Looper.getMainLooper())
+  private var consent: ((Boolean) -> Unit)? = null
   private var controller: ListenableFuture<MediaController>? = null
   private var attached: ExoPlayer? = null
 
@@ -122,10 +133,115 @@ class SoundtrailAudioModule : Module() {
     "bands" to PlayerHolder.equalizer.bands()
   )
 
+  private fun mediaItem(item: QueueItem): MediaItem {
+    val metadata = MediaMetadata.Builder()
+      .setTitle(item.title)
+      .setArtist(item.artist)
+      .apply { item.artworkUri?.let { setArtworkUri(Uri.parse(it)) } }
+      .build()
+    return MediaItem.Builder().setMediaId(item.id).setUri(item.uri).setMediaMetadata(metadata).build()
+  }
+
+  private fun askConsent(request: PendingIntent, then: (Boolean) -> Unit) {
+    val activity = appContext.currentActivity ?: return then(false)
+    consent?.invoke(false)
+    consent = then
+    activity.runOnUiThread {
+      runCatching { activity.startIntentSenderForResult(request.intentSender, CONSENT_REQUEST, null, 0, 0, 0) }
+        .onFailure { consent = null; then(false) }
+    }
+  }
+
+  private fun update(target: Uri, values: ContentValues, promise: Promise) {
+    val apply = {
+      runCatching { context.contentResolver.update(target, values, null, null) > 0 }
+        .onSuccess { promise.resolve(it) }
+        .onFailure { promise.reject(FileEditException(it.message ?: "Update failed")) }
+      Unit
+    }
+    when {
+      Build.VERSION.SDK_INT >= Build.VERSION_CODES.R ->
+        askConsent(MediaStore.createWriteRequest(context.contentResolver, listOf(target))) { ok ->
+          if (ok) apply() else promise.resolve(false)
+        }
+      else -> try {
+        promise.resolve(context.contentResolver.update(target, values, null, null) > 0)
+      } catch (e: RecoverableSecurityException) {
+        askConsent(e.userAction.actionIntent) { ok -> if (ok) apply() else promise.resolve(false) }
+      } catch (e: Throwable) {
+        promise.reject(FileEditException(e.message ?: "Update failed"))
+      }
+    }
+  }
+
+  private fun displayName(target: Uri): String? =
+    context.contentResolver.query(target, arrayOf(MediaStore.MediaColumns.DISPLAY_NAME), null, null, null)?.use { c ->
+      if (c.moveToFirst()) c.getString(0) else null
+    }
+
   override fun definition() = ModuleDefinition {
     Name("SoundtrailAudio")
 
     Events("onStatus", "onError")
+
+    OnActivityResult { _, payload ->
+      if (payload.requestCode == CONSENT_REQUEST) {
+        val done = consent
+        consent = null
+        done?.invoke(payload.resultCode == Activity.RESULT_OK)
+      }
+    }
+
+    AsyncFunction("renameFile") { uri: String, name: String, promise: Promise ->
+      val target = Uri.parse(uri)
+      val clean = name.trim()
+      if (clean.isEmpty() || clean.contains('/')) return@AsyncFunction promise.reject(FileEditException("Invalid name"))
+      val current = displayName(target) ?: return@AsyncFunction promise.reject(FileEditException("File not found"))
+      val extension = current.substringAfterLast('.', "").let { if (it.isEmpty() || it == current) "" else ".$it" }
+      val values = ContentValues().apply { put(MediaStore.MediaColumns.DISPLAY_NAME, clean + extension) }
+      update(target, values, promise)
+    }
+
+    AsyncFunction("moveFile") { uri: String, folder: String, promise: Promise ->
+      if (Build.VERSION.SDK_INT < Build.VERSION_CODES.Q) return@AsyncFunction promise.reject(FileEditException("Moving needs Android 10"))
+      val path = folder.trim('/', ' ')
+      if (path.isEmpty() || path.split('/').any { it.isBlank() || it == ".." }) {
+        return@AsyncFunction promise.reject(FileEditException("Invalid folder"))
+      }
+      val values = ContentValues().apply { put(MediaStore.MediaColumns.RELATIVE_PATH, "$path/") }
+      update(Uri.parse(uri), values, promise)
+    }
+
+    AsyncFunction("deleteFile") { uri: String, promise: Promise ->
+      val target = Uri.parse(uri)
+      if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+        askConsent(MediaStore.createDeleteRequest(context.contentResolver, listOf(target))) { ok -> promise.resolve(ok) }
+        return@AsyncFunction
+      }
+      try {
+        promise.resolve(context.contentResolver.delete(target, null, null) > 0)
+      } catch (e: RecoverableSecurityException) {
+        askConsent(e.userAction.actionIntent) { ok ->
+          if (!ok) promise.resolve(false)
+          else runCatching { context.contentResolver.delete(target, null, null) > 0 }
+            .onSuccess { promise.resolve(it) }
+            .onFailure { promise.reject(FileEditException(it.message ?: "Delete failed")) }
+        }
+      } catch (e: Throwable) {
+        promise.reject(FileEditException(e.message ?: "Delete failed"))
+      }
+    }
+
+    AsyncFunction("enqueue") { item: QueueItem, next: Boolean ->
+      val player = player()
+      val media = mediaItem(item)
+      if (player.mediaItemCount == 0) {
+        player.setMediaItem(media)
+        player.prepare()
+      } else {
+        player.addMediaItem(if (next) player.currentMediaItemIndex + 1 else player.mediaItemCount, media)
+      }
+    }.runOnQueue(Queues.MAIN)
 
     OnDestroy {
       handler.removeCallbacks(ticker)
@@ -167,14 +283,7 @@ class SoundtrailAudioModule : Module() {
 
     AsyncFunction("setQueue") { items: List<QueueItem>, startIndex: Int, playWhenReady: Boolean ->
       val player = player()
-      val media = items.map { item ->
-        val metadata = MediaMetadata.Builder()
-          .setTitle(item.title)
-          .setArtist(item.artist)
-          .apply { item.artworkUri?.let { setArtworkUri(Uri.parse(it)) } }
-          .build()
-        MediaItem.Builder().setMediaId(item.id).setUri(item.uri).setMediaMetadata(metadata).build()
-      }
+      val media = items.map(::mediaItem)
       player.setMediaItems(media, startIndex.coerceIn(0, (media.size - 1).coerceAtLeast(0)), 0L)
       player.prepare()
       player.playWhenReady = playWhenReady
@@ -241,3 +350,5 @@ class SoundtrailAudioModule : Module() {
     }
   }
 }
+
+private const val CONSENT_REQUEST = 0x5717

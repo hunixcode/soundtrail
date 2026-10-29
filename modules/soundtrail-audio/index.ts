@@ -93,6 +93,10 @@ declare class SoundtrailAudioModule extends NativeModule<Events> {
   setEqEnabled(enabled: boolean): Promise<void>;
   setEqGains(gains: number[]): Promise<void>;
   setEqBandGain(index: number, db: number): Promise<void>;
+  renameFile(uri: string, name: string): Promise<boolean>;
+  moveFile(uri: string, folder: string): Promise<boolean>;
+  deleteFile(uri: string): Promise<boolean>;
+  enqueue(item: QueueItem, next: boolean): Promise<void>;
 }
 
 export default requireNativeModule<SoundtrailAudioModule>('SoundtrailAudio');
