@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { memo, useEffect } from 'react';
 import { StyleSheet, View, type LayoutChangeEvent } from 'react-native';
 import { GestureDetector, usePanGesture } from 'react-native-gesture-handler';
 import Animated, { useAnimatedStyle, useSharedValue, withSpring, withTiming } from 'react-native-reanimated';
@@ -20,11 +20,21 @@ type Props = {
 
 const THUMB = 24;
 
-export function Slider({ value, steps, onChange, onCommit, vertical = false, thickness = 2, label, valueText }: Props) {
+export const Slider = memo(function Slider({
+  value,
+  steps,
+  onChange,
+  onCommit,
+  vertical = false,
+  thickness = 2,
+  label,
+  valueText,
+}: Props) {
   const colors = useColors();
   const size = useSharedValue(0);
   const progress = useSharedValue(value);
   const dragging = useSharedValue(false);
+  const grip = useSharedValue(1);
   const lastStep = useSharedValue(Math.round(value * steps));
 
   useEffect(() => {
@@ -51,6 +61,7 @@ export function Slider({ value, steps, onChange, onCommit, vertical = false, thi
     minDistance: 0,
     onBegin: (e) => {
       dragging.set(true);
+      grip.set(withSpring(1.15, motion.spring));
       update(vertical ? e.y : e.x);
     },
     onUpdate: (e) => {
@@ -58,6 +69,7 @@ export function Slider({ value, steps, onChange, onCommit, vertical = false, thi
     },
     onFinalize: () => {
       dragging.set(false);
+      grip.set(withSpring(1, motion.spring));
       const snapped = lastStep.value / steps;
       progress.set(withSpring(snapped, motion.spring));
       if (onCommit) scheduleOnRN(onCommit, snapped);
@@ -68,12 +80,13 @@ export function Slider({ value, steps, onChange, onCommit, vertical = false, thi
     size.set(vertical ? e.nativeEvent.layout.height : e.nativeEvent.layout.width);
   };
 
-  const fill = useAnimatedStyle(() =>
-    vertical ? { height: progress.value * size.value } : { width: progress.value * size.value },
-  );
+  const fill = useAnimatedStyle(() => {
+    const hidden = (1 - progress.value) * size.value;
+    return vertical ? { transform: [{ translateY: hidden }] } : { transform: [{ translateX: -hidden }] };
+  });
   const thumb = useAnimatedStyle(() => {
     const offset = progress.value * size.value - THUMB / 2;
-    const scale = withSpring(dragging.value ? 1.15 : 1, motion.spring);
+    const scale = grip.value;
     return vertical
       ? { transform: [{ translateY: -offset }, { scale }] }
       : { transform: [{ translateX: offset }, { scale }] };
@@ -124,15 +137,15 @@ export function Slider({ value, steps, onChange, onCommit, vertical = false, thi
       </Animated.View>
     </GestureDetector>
   );
-}
+});
 
 const styles = StyleSheet.create({
   hitHorizontal: { height: 48, justifyContent: 'center' },
   hitVertical: { flex: 1, width: 48, alignItems: 'center' },
   trackHorizontal: { width: '100%', overflow: 'hidden' },
   trackVertical: { flex: 1, overflow: 'hidden', justifyContent: 'flex-end' },
-  fillHorizontal: { height: '100%' },
-  fillVertical: { width: '100%' },
+  fillHorizontal: { height: '100%', width: '100%' },
+  fillVertical: { width: '100%', height: '100%' },
   thumb: { position: 'absolute', width: THUMB, height: THUMB, borderRadius: THUMB / 2 },
   thumbHorizontal: { left: 0, top: (48 - THUMB) / 2 },
   thumbVertical: { bottom: 0 },
