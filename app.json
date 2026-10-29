@@ -1,0 +1,38 @@
+{
+  "expo": {
+    "name": "soundtrail",
+    "slug": "soundtrail",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "userInterfaceStyle": "automatic",
+    "android": {
+      "package": "com.soundtrail.app",
+      "adaptiveIcon": {
+        "backgroundColor": "#000000",
+        "foregroundImage": "./assets/android-icon-foreground.png",
+        "backgroundImage": "./assets/android-icon-background.png",
+        "monochromeImage": "./assets/android-icon-monochrome.png"
+      },
+      "predictiveBackGestureEnabled": false,
+      "permissions": [
+        "android.permission.READ_MEDIA_AUDIO",
+        "android.permission.READ_EXTERNAL_STORAGE",
+        "android.permission.POST_NOTIFICATIONS"
+      ]
+    },
+    "plugins": [
+      "expo-router",
+      "expo-font"
+    ],
+    "scheme": "soundtrail",
+    "backgroundColor": "#000000",
+    "platforms": [
+      "android"
+    ],
+    "extra": {
+      "lyricsApi": "https://lrclib.net/api",
+      "streamApi": "https://api.audius.co/v1"
+    }
+  }
+}
