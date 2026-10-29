@@ -62,7 +62,7 @@ Each milestone ends with something that runs on a real Android device.
 | A10 | Equalizer fallback | On a device without an effect, the screen says so and playback still works. |
 | A11 | Presets | Built-in presets apply; user preset saves and survives restart. |
 | A12 | Permission denied | App explains the need and does not crash. |
-| A13 | Offline | Every feature works with airplane mode on. |
+| A13 | Offline | Every feature except lyrics and online music works with airplane mode on; those two say they are unavailable. |
 | A14 | Dependency audit | `npm audit --omit=dev` shows no high or critical findings. |
 | A15 | Test devices | Checklist passes on at least two Android devices from different brands. |
 | A16 | Navbar | Four tabs switch correctly; active pill animates; list content is not hidden under the navbar. |
@@ -70,6 +70,8 @@ Each milestone ends with something that runs on a real Android device.
 | A18 | Mini player | Island row shows on Library, Speed, Equalizer while a track is loaded; tap opens Player; swipe changes track; collapses on Player. |
 | A19 | Speed page | Slider, stepper, reset, and quick presets all set the same value; value persists and applies with no track loaded. |
 | A20 | Design system | Design acceptance D-A1 to D-A6 in `04-design-system.md` all pass. |
+| A21 | Lyrics | Synced lyrics follow playback and a tapped line seeks; tracks with no match say so. |
+| A22 | Online music | Trending shows with no search, a search returns tracks, and a streamed track plays with EQ and speed. |
 
 ## 3. Definition of done (every PR)
 

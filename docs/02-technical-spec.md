@@ -128,12 +128,13 @@ Versions are not written in these docs on purpose. The version in use is whateve
 | `READ_MEDIA_VIDEO` (Android 13+) | Scan and pick video files | When the user taps "Add video" or the library scan needs video. |
 | `FOREGROUND_SERVICE`, `FOREGROUND_SERVICE_MEDIA_PLAYBACK`, `POST_NOTIFICATIONS` | Background playback and its notification | When the first track starts playing. |
 
-Do not request location, contacts, microphone, camera, or network-state permissions for v1. Network is not used.
+`INTERNET` is used only for lyrics and online music. Do not request location, contacts, microphone, camera, or network-state permissions.
 
 ## 6. Security and privacy
 
 - No analytics, crash reporting, or ad SDKs in v1.
-- No user files leave the device.
+- No user files leave the device. Lyrics lookups send the track title, artist and duration to LRCLIB; online searches send the search text to Audius. Nothing else is sent.
+- API endpoints live in `app.json` under `expo.extra` (`lyricsApi`, `streamApi`) and are read through `expo-constants`; none are in source. Both services are free and need no key. Requests time out after 10 s and retry twice on server errors.
 - File access uses URIs granted by the system picker or the media scan. The app does not walk the file system beyond what the media scan returns.
 - Validate every URI and file type on the native side before handing it to ExoPlayer.
 - Store only settings and preset names on device. No file contents.
@@ -149,7 +150,8 @@ soundtrail/
 │   ├── audio/                 # TypeScript wrapper around the native module
 │   ├── state/                 # store, actions, prefs parsing
 │   ├── theme/                 # tokens and theme hooks
-│   └── library/               # scan and file-picking helpers
+│   ├── library/               # scan and file-picking helpers
+│   └── online/                # lyrics (LRCLIB) and streaming (Audius) clients
 ├── modules/
 │   └── soundtrail-audio/      # Expo Module: Kotlin + TypeScript bindings
 ├── docs/                      # this folder

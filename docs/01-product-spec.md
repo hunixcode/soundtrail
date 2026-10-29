@@ -42,7 +42,13 @@ Let a user listen to their own audio and video files with control over sound qua
 - Speed setting applies during playback and persists between launches.
 - Speed has its own **Speed page** (section 5, screen 3). It is the main place to change speed. The Now playing page shows the current speed as a small read-only label that opens the Speed page.
 
-### 3.5 Shared behavior
+### 3.5 Online extras
+
+- **Lyrics**: the Player shows the lyrics of the current track, fetched from LRCLIB (free, no account, no key). Synced lyrics highlight the current line and scroll with playback; tapping a line seeks to it. Plain lyrics show as text. If nothing matches, the page says so.
+- **Online music**: an "Online" filter in the Library searches free tracks on Audius (free, no account, no key) and shows trending tracks when the search is empty. Online tracks stream and get the same equalizer, speed and queue as local files.
+- Both need a connection. Without one, the rest of the app works as before and these views say they are unavailable.
+
+### 3.6 Shared behavior
 
 - The equalizer and speed settings are global. They apply to every track and every video.
 - Playing a new file keeps the current equalizer and speed settings.
@@ -95,8 +101,8 @@ The mini player is the navbar's expanded "island" state, not a separate bar:
 
 ### 5.3 Screens
 
-1. **Library**: list of audio files and videos (see D4), search box, tap to play. Button to add a video file. Gear icon opens Settings.
-2. **Player** (Spotify-like full now-playing): large square artwork (placeholder when none), title and artist, progress bar with elapsed and remaining time, play/pause (large), previous, next, shuffle and repeat toggles, and a queue button that shows the upcoming tracks as a list. A chevron at the top closes it back to the previous tab. No speed or equalizer controls here, except the small speed label described in section 3.4.
+1. **Library**: list of audio files and videos (see D4), search box, tap to play. Filters: All, Music, Videos, Online (section 3.5). Button to add a video file. Gear icon opens Settings.
+2. **Player** (Spotify-like full now-playing): large square artwork (placeholder when none), title and artist, progress bar with elapsed and remaining time, play/pause (large), previous, next, shuffle and repeat toggles, a lyrics button that swaps the artwork for the lyrics (section 3.5), and a queue button that shows the upcoming tracks as a list. A chevron at the top closes it back to the previous tab. No speed or equalizer controls here, except the small speed label described in section 3.4.
 3. **Speed**: its own page. Large readout of the current speed (for example "1.25x"), a slider from 0.5x to 2.0x in 0.05x steps, a stepper (minus/plus buttons, same step), a reset-to-1.0x button, and quick presets (0.75x, 1.0x, 1.25x, 1.5x). A note under the readout says the pitch follows the speed. Works with no track loaded: the value is saved and applies to the next track.
 4. **Equalizer**: on/off switch, preset picker, band sliders, save-preset button.
 5. **Settings** (opened from the Library gear icon): reset equalizer, reset speed, clear library cache, app version. Nothing else in v1.
@@ -106,7 +112,7 @@ Layout rules: Android phone portrait first. Touch targets at least 48 dp. Text r
 ## 6. Non-goals (v1)
 
 - No iOS build.
-- No streaming, accounts, cloud sync, or ads.
+- No paid streaming services, accounts, cloud sync, or ads. Only the free, keyless sources in section 3.5.
 - No pitch shifting independent of speed (a "key change" feature), and no time-stretching that keeps the pitch.
 - No video picture playback, subtitles, or video editing.
 - No exporting or re-encoding audio files.
@@ -119,5 +125,5 @@ Layout rules: Android phone portrait first. Touch targets at least 48 dp. Text r
 - Playback starts within about 1 second for a local file on a mid-range phone.
 - Changing an equalizer band or the speed is audible within about 200 ms.
 - No crash when a file is corrupt or unsupported; the user sees an error message and the app keeps running.
-- Works offline. Nothing in v1 needs the network.
+- Works offline, except lyrics and online music (section 3.5).
 - Respects storage and media permissions: asks only for what it needs, explains why, and works with a denial (shows a message, does not crash).
