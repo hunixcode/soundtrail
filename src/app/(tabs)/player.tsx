@@ -80,8 +80,10 @@ export default function PlayerScreen() {
                 <Queue />
               </Animated.View>
             ) : (
-              <Animated.View key="art" entering={FadeIn.duration(250)} exiting={FadeOut.duration(150)} style={[styles.artWrap, artStyle]}>
-                <Artwork item={item} size={artSize} />
+              <Animated.View key="art" entering={FadeIn.duration(250)} exiting={FadeOut.duration(150)} style={styles.artWrap}>
+                <Animated.View style={artStyle}>
+                  <Artwork item={item} size={artSize} />
+                </Animated.View>
               </Animated.View>
             )}
           </View>
