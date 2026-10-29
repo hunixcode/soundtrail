@@ -126,7 +126,7 @@ Versions are not written in these docs on purpose. The version in use is whateve
 | `READ_MEDIA_AUDIO` (Android 13+) / `READ_EXTERNAL_STORAGE` (older) | Scan music files | On first open of the Library screen. |
 | `FOREGROUND_SERVICE`, `FOREGROUND_SERVICE_MEDIA_PLAYBACK`, `POST_NOTIFICATIONS` | Background playback and its notification | When the first track starts playing. |
 
-`INTERNET` is used only for lyrics and online music. Do not request location, contacts, microphone, camera, or network-state permissions.
+Renaming, moving and deleting a file go through `MediaStore.createWriteRequest` / `createDeleteRequest` (Android 11+), so the system asks the user each time and no extra permission is needed. `INTERNET` is used only for lyrics and online music. Do not request location, contacts, microphone, camera, or network-state permissions.
 
 ## 6. Security and privacy
 
