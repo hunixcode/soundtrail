@@ -1,6 +1,5 @@
 import { StyleSheet, View } from 'react-native';
 import { ScrollView } from 'react-native-gesture-handler';
-import Animated, { FadeIn } from 'react-native-reanimated';
 
 import { Chip } from '../../components/Chip';
 import { Icon } from '../../components/Icon';
@@ -19,7 +18,7 @@ import {
   speedToRatio,
   stepSpeed,
 } from '../../audio/speed';
-import { currentItem, setSpeed, useApp } from '../../state/app';
+import { setSpeed, useApp } from '../../state/app';
 import { useColors } from '../../theme/useTheme';
 import { layout, radius, space, type } from '../../theme/tokens';
 
@@ -29,7 +28,6 @@ export default function SpeedScreen() {
   const colors = useColors();
   const { reserve } = useIslandMetrics(false);
   const speed = useApp((s) => s.prefs.speed);
-  const item = useApp(currentItem);
   const [whole, fraction] = speed.toFixed(2).split('.');
 
   return (
@@ -97,13 +95,6 @@ export default function SpeedScreen() {
             ))}
           </View>
         </View>
-
-        <Animated.View key={item?.id ?? 'none'} entering={FadeIn.duration(250)} style={[styles.nowCard, { backgroundColor: colors.bgRaised }]}>
-          <Icon name={item ? 'volume-2' : 'info'} size={18} color="fgSecondary" />
-          <Txt tone="secondary" numberOfLines={2} style={styles.flex}>
-            {item ? `Applies to “${item.title}” and everything after it.` : 'No track loaded. This speed applies to the next one you play.'}
-          </Txt>
-        </Animated.View>
       </ScrollView>
     </Screen>
   );
@@ -145,6 +136,4 @@ const styles = StyleSheet.create({
   },
   section: { gap: space.md },
   presets: { flexDirection: 'row', flexWrap: 'wrap', gap: space.sm },
-  nowCard: { flexDirection: 'row', alignItems: 'center', gap: space.md, padding: space.lg, borderRadius: radius.card },
-  flex: { flex: 1 },
 });
