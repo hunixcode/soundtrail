@@ -13,6 +13,7 @@ class EqualizerController {
   val isEnabled: Boolean
     get() = enabled
 
+  @Synchronized
   fun attach(sessionId: Int) {
     release()
     val eq = try {
@@ -25,6 +26,7 @@ class EqualizerController {
     runCatching { eq.setEnabled(enabled) }
   }
 
+  @Synchronized
   fun bands(): List<Map<String, Any>> {
     val eq = equalizer ?: return emptyList()
     return runCatching {
@@ -42,11 +44,13 @@ class EqualizerController {
     }.getOrDefault(emptyList())
   }
 
+  @Synchronized
   fun setEnabled(on: Boolean) {
     enabled = on
     equalizer?.let { runCatching { it.setEnabled(on) } }
   }
 
+  @Synchronized
   fun setGain(index: Int, db: Double) {
     val eq = equalizer ?: return
     runCatching {
@@ -57,6 +61,7 @@ class EqualizerController {
     }
   }
 
+  @Synchronized
   fun release() {
     equalizer?.let { runCatching { it.release() } }
     equalizer = null

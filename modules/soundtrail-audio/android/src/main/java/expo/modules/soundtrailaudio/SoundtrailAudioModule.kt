@@ -237,8 +237,7 @@ class SoundtrailAudioModule : Module() {
     }.runOnQueue(Queues.MAIN)
 
     AsyncFunction("setEqBandGain") { index: Int, db: Double ->
-      player()
       PlayerHolder.equalizer.setGain(index, db)
-    }.runOnQueue(Queues.MAIN)
+    }
   }
 }
