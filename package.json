@@ -1,7 +1,7 @@
 {
   "name": "soundtrail",
   "version": "1.0.0",
-  "main": "index.ts",
+  "main": "expo-router/entry",
   "dependencies": {
     "@expo-google-fonts/archivo": "^0.4.2",
     "@expo-google-fonts/jetbrains-mono": "^0.4.1",
@@ -27,9 +27,9 @@
   },
   "scripts": {
     "start": "expo start",
-    "android": "expo start --android",
-    "ios": "expo start --ios",
-    "web": "expo start --web"
+    "android": "expo run:android",
+    "typecheck": "tsc --noEmit",
+    "audit": "npm audit --omit=dev --audit-level=high"
   },
   "private": true,
   "overrides": {
