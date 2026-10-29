@@ -36,7 +36,7 @@ Let a user listen to their own audio files with control over sound quality (equa
 
 ### 3.4 Speed changer
 
-- Playback speed control from 0.5x to 2.0x, in steps of 0.05x, with a reset to 1.0x.
+- Playback speed control from 0.5x to 2.0x, in steps of 0.01x, with a reset to 1.0x.
 - Pitch follows the speed, like a record played faster or slower: 1.25x sounds higher, 0.75x sounds lower.
 - Speed setting applies during playback and persists between launches.
 - Speed has its own **Speed page** (section 5, screen 3). It is the main place to change speed. The Now playing page shows the current speed as a small read-only label that opens the Speed page.
@@ -102,7 +102,7 @@ The mini player is the navbar's expanded "island" state, not a separate bar:
 
 1. **Library**: list of audio files, search box, tap to play. Filters: On device, Online (section 3.5). Button to open an audio file. Gear icon opens Settings.
 2. **Player** (Spotify-like full now-playing): large square artwork (placeholder when none), title and artist, progress bar with elapsed and remaining time, play/pause (large), previous, next, shuffle and repeat toggles, a lyrics button that swaps the artwork for the lyrics (section 3.5), and a queue button that shows the upcoming tracks as a list. A chevron at the top closes it back to the previous tab. No speed or equalizer controls here, except the small speed label described in section 3.4.
-3. **Speed**: its own page. Large readout of the current speed (for example "1.25x"), a slider from 0.5x to 2.0x in 0.05x steps, a stepper (minus/plus buttons, same step), a reset-to-1.0x button, and quick presets (0.75x, 1.0x, 1.25x, 1.5x). A note under the readout says the pitch follows the speed. Works with no track loaded: the value is saved and applies to the next track.
+3. **Speed**: its own page. Large readout of the current speed (for example "1.25x"), a slider from 0.5x to 2.0x in 0.01x steps, a stepper (minus/plus buttons, same step), a reset-to-1.0x button, and quick presets (0.75x, 1.0x, 1.25x, 1.5x). A note under the readout says the pitch follows the speed. Works with no track loaded: the value is saved and applies to the next track.
 4. **Equalizer**: on/off switch, preset picker, band sliders, save-preset button.
 5. **Settings** (opened from the Library gear icon): reset equalizer, reset speed, clear library cache, app version. Nothing else in v1.
 
