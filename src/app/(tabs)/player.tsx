@@ -7,6 +7,7 @@ import type { LibraryItem } from '../../../modules/soundtrail-audio';
 import { Artwork } from '../../components/Artwork';
 import { Icon, type IconName } from '../../components/Icon';
 import { useIslandMetrics } from '../../components/IslandNav';
+import { LyricsView } from '../../components/LyricsView';
 import { PressableScale } from '../../components/PressableScale';
 import { Screen } from '../../components/Screen';
 import { Slider } from '../../components/Slider';
@@ -29,12 +30,17 @@ import { TAB_HREF, previousTab } from '../../state/nav';
 import { useColors } from '../../theme/useTheme';
 import { layout, motion, radius, space } from '../../theme/tokens';
 
+type Stage = 'art' | 'lyrics' | 'queue';
+
+const STAGE_LABEL: Record<Stage, string> = { art: 'Now playing', lyrics: 'Lyrics', queue: 'Up next' };
+
 export default function PlayerScreen() {
   const colors = useColors();
   const { width, height } = useWindowDimensions();
   const { reserve } = useIslandMetrics(true);
   const item = useApp(currentItem);
-  const [showQueue, setShowQueue] = useState(false);
+  const [stage, setStage] = useState<Stage>('art');
+  const toggle = (next: Stage) => setStage((s) => (s === next ? 'art' : next));
   const artSize = Math.min(width - space.xxl * 2, layout.maxContentWidth - space.xxl * 2, height * 0.42);
 
   const rise = useSharedValue(0);
@@ -52,32 +58,48 @@ export default function PlayerScreen() {
   return (
     <Screen>
       <View style={styles.topBar}>
-        <PressableScale
-          onPress={() => router.navigate(TAB_HREF[previousTab()])}
-          accessibilityLabel="Close player"
-          style={styles.iconButton}
-        >
-          <Icon name="chevron-down" size={26} />
-        </PressableScale>
+        <View style={styles.side}>
+          <PressableScale
+            onPress={() => router.navigate(TAB_HREF[previousTab()])}
+            accessibilityLabel="Close player"
+            style={styles.iconButton}
+          >
+            <Icon name="chevron-down" size={26} />
+          </PressableScale>
+        </View>
         <Txt variant="label" tone="secondary">
-          {showQueue ? 'Up next' : 'Now playing'}
+          {STAGE_LABEL[stage]}
         </Txt>
-        <PressableScale
-          onPress={() => setShowQueue((v) => !v)}
-          accessibilityLabel={showQueue ? 'Hide queue' : 'Show queue'}
-          accessibilityState={{ selected: showQueue }}
-          style={styles.iconButton}
-        >
-          <Icon name="list" size={22} color={showQueue ? 'fgPrimary' : 'fgSecondary'} />
-        </PressableScale>
+        <View style={[styles.side, styles.sideEnd]}>
+          <PressableScale
+            onPress={() => toggle('lyrics')}
+            accessibilityLabel={stage === 'lyrics' ? 'Hide lyrics' : 'Show lyrics'}
+            accessibilityState={{ selected: stage === 'lyrics' }}
+            style={styles.iconButton}
+          >
+            <Icon name="align-left" size={22} color={stage === 'lyrics' ? 'fgPrimary' : 'fgSecondary'} />
+          </PressableScale>
+          <PressableScale
+            onPress={() => toggle('queue')}
+            accessibilityLabel={stage === 'queue' ? 'Hide queue' : 'Show queue'}
+            accessibilityState={{ selected: stage === 'queue' }}
+            style={styles.iconButton}
+          >
+            <Icon name="list" size={22} color={stage === 'queue' ? 'fgPrimary' : 'fgSecondary'} />
+          </PressableScale>
+        </View>
       </View>
 
       {item ? (
         <View style={[styles.body, { paddingBottom: reserve }]}>
           <View style={styles.stage}>
-            {showQueue ? (
+            {stage === 'queue' ? (
               <Animated.View key="queue" entering={FadeIn.duration(250)} exiting={FadeOut.duration(150)} style={styles.fill}>
                 <Queue />
+              </Animated.View>
+            ) : stage === 'lyrics' ? (
+              <Animated.View key="lyrics" entering={FadeIn.duration(250)} exiting={FadeOut.duration(150)} style={styles.lyrics}>
+                <LyricsView item={item} />
               </Animated.View>
             ) : (
               <Animated.View key="art" entering={FadeIn.duration(250)} exiting={FadeOut.duration(150)} style={styles.artWrap}>
@@ -256,10 +278,13 @@ const styles = StyleSheet.create({
     paddingTop: space.sm,
     height: 56,
   },
+  side: { width: 96, flexDirection: 'row' },
+  sideEnd: { justifyContent: 'flex-end' },
   iconButton: { width: 48, height: 48, alignItems: 'center', justifyContent: 'center' },
   body: { flex: 1, paddingHorizontal: space.xl, gap: space.lg },
   stage: { flex: 1, alignItems: 'center', justifyContent: 'center', minHeight: 160 },
   fill: { alignSelf: 'stretch', flex: 1, marginHorizontal: -space.xl },
+  lyrics: { alignSelf: 'stretch', flex: 1 },
   artWrap: { alignItems: 'center', justifyContent: 'center' },
   meta: { flexDirection: 'row', alignItems: 'flex-end', gap: space.md },
   metaText: { flex: 1, gap: space.xs },
