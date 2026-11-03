@@ -53,7 +53,7 @@ export const type = {
 
 export const space = { xs: 4, sm: 8, md: 12, lg: 16, xl: 24, xxl: 32, xxxl: 48 } as const;
 
-export const radius = { artwork: 8, card: 12, pill: 999 } as const;
+export const radius = { artwork: 4, card: 6, pill: 10 } as const;
 
 export const layout = {
   gutter: 16,
