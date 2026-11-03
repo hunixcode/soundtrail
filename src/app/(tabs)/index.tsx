@@ -141,6 +141,9 @@ export default function LibraryScreen() {
           <PressableScale onPress={pickFile} accessibilityLabel="Open an audio file" style={styles.iconButton}>
             <Icon name="folder" size={22} />
           </PressableScale>
+          <PressableScale onPress={() => router.push('/youtube')} accessibilityLabel="Download from YouTube" style={styles.iconButton}>
+            <Icon name="youtube" size={22} />
+          </PressableScale>
           <PressableScale onPress={() => router.push('/settings')} accessibilityLabel="Settings" style={styles.iconButton}>
             <Icon name="settings" size={22} />
           </PressableScale>
