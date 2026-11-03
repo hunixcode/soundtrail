@@ -92,6 +92,8 @@ interface SoundtrailAudio {
 }
 ```
 
+The scan also returns each file's `genre` (Android 11+) and `addedAt`, used by the Library Home. `getCoverColor(source)` returns the main color of a cached artwork file or an `https` cover as `#RRGGBB`.
+
 `download` runs yt-dlp on a background thread (`-f 140/bestaudio -x --audio-format m4a --embed-metadata --embed-thumbnail`) into the app cache, then copies the M4A into MediaStore under the given `Music/...` folder (Android 10+). The first download of each app session unpacks Python and updates yt-dlp from its GitHub releases, so it takes longer. `organizeFiles` asks for one `MediaStore.createWriteRequest` consent for every file (Android 11+), then sets each file's folder and name off the main thread and returns how many changed. Both check folders and names on the native side.
 
 Error contract: every native failure becomes a rejected promise or an `onError` event with a short code (`UNSUPPORTED_FORMAT`, `NO_AUDIO_TRACK`, `IO_ERROR`, `EQ_UNAVAILABLE`). The UI maps codes to messages.

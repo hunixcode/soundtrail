@@ -1,6 +1,6 @@
 # 04 · Design system
 
-Visual direction: **monochrome, minimal, sleek.** The interface is black, white, and grays. Color is not used for decoration. Album artwork is the only color on screen, and it is shown as is.
+Visual direction: **monochrome, minimal, sleek.** The interface is black, white, and grays. Color is not used for decoration. Album artwork is the only source of color: it is shown as is, and the Player background takes a dark (or, in light theme, pale) tint of the cover's main color.
 
 ## 1. Principles
 
@@ -26,7 +26,7 @@ Dark is the default theme. Light is supported with the same token names.
 
 Rules:
 
-- No other colors in the UI. The only exceptions are system UI (status bar) and artwork.
+- No other colors in the UI. The only exceptions are system UI (status bar), artwork, and the Player tint: the cover's main color (picked natively, vivid pixels weighted first) mixed to 22% over black in dark theme and 18% over white in light theme, so primary and secondary text keep AA contrast (`src/theme/tint.ts`, tested). The vinyl uses the `vinyl` and `groove` tokens.
 - Error state uses `fg.primary` with an icon and text, not red. Keeps the palette strictly monochrome.
 - Contrast: all text pairs meet WCAG AA (4.5:1 for body text, 3:1 for large text and icons). Check every pair when a token changes.
 
