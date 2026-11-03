@@ -72,6 +72,8 @@ Each milestone ends with something that runs on a real Android device.
 | A20 | Design system | Design acceptance D-A1 to D-A6 in `04-design-system.md` all pass. |
 | A21 | Lyrics | Synced lyrics follow playback and a tapped line seeks; tracks with no match say so. |
 | A22 | Online music | Trending shows with no search, a search returns tracks, and a streamed track plays with EQ and speed. |
+| A23 | YouTube downloads | A searched song and a whole playlist download, show up in the Library with title, artist and cover, and play. |
+| A24 | Organize with AI | Suggest lists changes, Apply asks Android once, and the files end up in the shown folders with the shown names. |
 
 ## 3. Definition of done (every PR)
 
@@ -96,6 +98,8 @@ These need an answer before the milestone that depends on them. Each one has a r
 | D7 | Whether to add pitch shifting later | Out of scope for v1; revisit after M5 | After M5 |
 | D8 | Dynamic-island navbar implementation | Custom tab bar built with `react-native-reanimated` (no third-party navbar package) | M1 |
 | D9 | Player tab vs. full-screen modal | Player is a tab, so the navbar stays visible; a modal would hide it | M1 |
+| D10 | YouTube download engine | **Decided:** yt-dlp through youtubedl-android 0.18.1 (Maven Central, last release Nov 2025). It is GPL-3.0, so a distributed build of soundtrail must be GPL-3.0 too, and it adds about 50 MB per ABI (Python, QuickJS, ffmpeg). Hand-made YouTube requests were tried first and fail after 1 MB on music tracks without a proof-of-origin token. Revisit if the library stops getting releases. | After M5 |
+| D11 | AI provider for Organize | **Decided:** keyless Pollinations (OpenAI-compatible, gpt-oss-20b). Any OpenAI-compatible API works through `aiApi`, `aiRequest` and `EXPO_PUBLIC_AI_KEY`. | After M5 |
 
 ## 5. After v1 (ideas, not commitments)
 

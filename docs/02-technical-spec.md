@@ -11,6 +11,8 @@
 | Local storage (settings, presets) | Android `SharedPreferences`, exposed by the audio module (`getPrefs` / `setPrefs`), validated in `src/state/prefs.ts` | No extra dependency; the native module already exists. |
 | Media file access | `expo-document-picker` (pick an audio file) and a MediaStore query in the audio module (scan device audio) | The scan needs only a few columns; doing it natively avoids another dependency. |
 | Playback and audio effects | **Custom Expo Module** (`modules/soundtrail-audio`) wrapping AndroidX Media3 (ExoPlayer) and the Android audio effects API | Only native code can give us a real equalizer and speed control on the audio output. See section 3. |
+| YouTube downloads | yt-dlp through `io.github.junkfood02.youtubedl-android` (`library` and `ffmpeg`, Maven Central), called from the audio module | yt-dlp is the only downloader that keeps up with YouTube's anti-bot changes; the library bundles Python, QuickJS and ffmpeg for Android and updates yt-dlp itself. |
+| AI organizing | Any OpenAI-compatible chat API; the default is the keyless Pollinations endpoint | Free with no account; another provider is a config change. |
 | Testing | Jest with `jest-expo` for JS logic; the native module has unit tests in Kotlin (JUnit) | Matches the Expo defaults. |
 | Build | EAS Build (Android APK/AAB) | Standard Expo build pipeline. |
 
@@ -50,7 +52,7 @@ Rules:
 
 ### 2.1 Navigation and shell
 
-- Routing with `expo-router` (routes live in `src/app/`). The four main sections are the tabs of one layout built with `expo-router/ui`: `src/app/(tabs)/index` (Library), `player`, `speed`, `equalizer`. Settings is a stack screen (`src/app/settings`) pushed from the Library header.
+- Routing with `expo-router` (routes live in `src/app/`). The four main sections are the tabs of one layout built with `expo-router/ui`: `src/app/(tabs)/index` (Library), `player`, `speed`, `equalizer`. Settings, YouTube (`src/app/youtube`), a playlist or album (`src/app/playlist`) and Organize (`src/app/organize`) are stack screens pushed from the Library header.
 - The Player is a tab. The island's now-playing row and the Player tab read one store (`src/state/app.ts`), so they never disagree.
 - The bottom navbar is a **custom tab bar** passed to the tabs layout, not the default Expo tab bar. It is built with `react-native-reanimated` for the pill and island animations, installed through `npx expo install` (rule 1 of section 4) and checked with the dependency rules.
 - The navbar's compact now-playing strip reads from the same now-playing state. It is hidden on the Player tab.
@@ -84,9 +86,13 @@ interface SoundtrailAudio {
   getEqBands(): EqBand[];               // from the device, may be empty
   setEqBandGain(index: number, db: number): void;
   release(): void;
-  // events: onState, onProgress, onError, onEnded
+  download(id: string, url: string, folder: string, name: string): Promise<string>;
+  organizeFiles(moves: { uri: string; folder: string; name: string }[]): Promise<number>;
+  // events: onState, onProgress, onError, onEnded, onDownload { id, progress }
 }
 ```
+
+`download` runs yt-dlp on a background thread (`-f 140/bestaudio -x --audio-format m4a --embed-metadata --embed-thumbnail`) into the app cache, then copies the M4A into MediaStore under the given `Music/...` folder (Android 10+). The first download of each app session unpacks Python and updates yt-dlp from its GitHub releases, so it takes longer. `organizeFiles` asks for one `MediaStore.createWriteRequest` consent for every file (Android 11+), then sets each file's folder and name off the main thread and returns how many changed. Both check folders and names on the native side.
 
 Error contract: every native failure becomes a rejected promise or an `onError` event with a short code (`UNSUPPORTED_FORMAT`, `NO_AUDIO_TRACK`, `IO_ERROR`, `EQ_UNAVAILABLE`). The UI maps codes to messages.
 
@@ -126,13 +132,14 @@ Versions are not written in these docs on purpose. The version in use is whateve
 | `READ_MEDIA_AUDIO` (Android 13+) / `READ_EXTERNAL_STORAGE` (older) | Scan music files | On first open of the Library screen. |
 | `FOREGROUND_SERVICE`, `FOREGROUND_SERVICE_MEDIA_PLAYBACK`, `POST_NOTIFICATIONS` | Background playback and its notification | When the first track starts playing. |
 
-Renaming, moving and deleting a file go through `MediaStore.createWriteRequest` / `createDeleteRequest` (Android 11+), so the system asks the user each time and no extra permission is needed. `INTERNET` is used only for lyrics and online music. Do not request location, contacts, microphone, camera, or network-state permissions.
+Renaming, moving and deleting a file go through `MediaStore.createWriteRequest` / `createDeleteRequest` (Android 11+), so the system asks the user each time and no extra permission is needed. `INTERNET` is used only for the online extras (lyrics, online music, YouTube, AI organizing). Downloads are written to `Music/` through MediaStore, which needs no storage permission on Android 10+. Do not request location, contacts, microphone, camera, or network-state permissions.
 
 ## 6. Security and privacy
 
 - No analytics, crash reporting, or ad SDKs in v1.
-- No user files leave the device. Lyrics lookups send the track title, artist and duration to LRCLIB; online searches send the search text to Audius. Nothing else is sent.
-- API endpoints live in `app.json` under `expo.extra` (`lyricsApi`, `streamApi`) and are read through `expo-constants`; none are in source. Both services are free and need no key. Requests time out after 10 s and retry twice on server errors.
+- No user files leave the device. Lyrics lookups send the track title, artist and duration to LRCLIB; online searches send the search text to Audius; YouTube searches send the search text to YouTube Music, and downloads fetch the chosen video through yt-dlp. Organize sends each file's name, folder, title, artist and album to the AI service. Nothing else is sent.
+- API endpoints live in `app.json` under `expo.extra` (`lyricsApi`, `streamApi`, `musicSite`, `musicClient`, `aiApi`, `aiRequest`) and are read through `expo-constants`; none are in source. Every service is free and needs no key. Requests time out after 10 s (AI: 120 s) and retry twice on server errors.
+- The keyless AI tier allows one reply every 45 s per IP and about 1,500 output tokens, so Organize sends 50 tracks per request, waits and retries on 402/429, and splits a request in half when the reply is cut off. To go faster, set `EXPO_PUBLIC_AI_KEY` in `.env.local` (see `.env.example`) and point `aiApi`/`aiRequest` at any OpenAI-compatible provider (for example a Pollinations key, Google Gemini or Groq free tiers). The key is built into the app bundle, so only use a key for builds you keep to yourself.
 - File access uses URIs granted by the system picker or the media scan. The app does not walk the file system beyond what the media scan returns.
 - Validate every URI and file type on the native side before handing it to ExoPlayer.
 - Store only settings and preset names on device. No file contents.
@@ -149,7 +156,7 @@ soundtrail/
 │   ├── state/                 # store, actions, prefs parsing
 │   ├── theme/                 # tokens and theme hooks
 │   ├── library/               # scan and file-picking helpers
-│   └── online/                # lyrics (LRCLIB) and streaming (Audius) clients
+│   └── online/                # lyrics (LRCLIB), streaming (Audius), YouTube Music and AI organize clients
 ├── modules/
 │   └── soundtrail-audio/      # Expo Module: Kotlin + TypeScript bindings
 ├── docs/                      # this folder

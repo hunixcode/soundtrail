@@ -21,6 +21,10 @@ npm run android
 
 `npm run android` builds a debug app, installs it and starts Metro.
 
+YouTube downloads bundle yt-dlp with Python and ffmpeg (about 50 MB per ABI), so build for your device's ABI only (`-PreactNativeArchitectures=arm64-v8a`, as below). The first download after each launch takes longer while yt-dlp updates itself.
+
+Organize with AI works without a key. For faster answers, copy `.env.example` to `.env.local`, set `EXPO_PUBLIC_AI_KEY`, and change `aiApi`/`aiRequest` in `app.json` if the key belongs to another OpenAI-compatible provider.
+
 On machines with 16 GB of RAM or less, the native C++ build can run out of memory. Build with fewer workers instead:
 
 ```bash

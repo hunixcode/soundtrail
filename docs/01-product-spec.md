@@ -45,7 +45,9 @@ Let a user listen to their own audio files with control over sound quality (equa
 
 - **Lyrics**: the Player shows the lyrics of the current track, fetched from LRCLIB (free, no account, no key). Synced lyrics highlight the current line and scroll with playback; tapping a line seeks to it. Plain lyrics show as text. If nothing matches, the page says so.
 - **Online music**: an "Online" filter in the Library searches free tracks on Audius (free, no account, no key) and shows trending tracks when the search is empty. Online tracks stream and get the same equalizer, speed and queue as local files.
-- Both need a connection. Without one, the rest of the app works as before and these views say they are unavailable.
+- **YouTube downloads**: a YouTube page, opened from the Library header, searches YouTube Music (free, no account, no key) for songs, videos, playlists and albums, and opens pasted playlist or album links. Tapping a song downloads it; a playlist or album page has a "Download all" button. Downloads run one at a time with their progress on each row, and land as tagged M4A files with cover art in `Music/soundtrail/` (one sub-folder per playlist or album), where the library picks them up.
+- **Organize with AI**: a button in the Library header opens the Organize page. A free AI service suggests a folder inside `Music/` and a cleaner file name for every file on the device, following an optional instruction ("by genre", "artist then album"). The page lists every change; nothing moves until the user taps Apply, and Android asks once for all files.
+- All of these need a connection. Without one, the rest of the app works as before and these views say they are unavailable.
 
 ### 3.6 Shared behavior
 
@@ -67,6 +69,8 @@ Let a user listen to their own audio files with control over sound quality (equa
 | US-9 | open a dedicated Speed page and set the tempo there | I can work on speed without the rest of the player in the way |
 | US-10 | see a Spotify-like player: a mini bar that opens into a full now-playing view | I can follow what is playing from any screen |
 | US-11 | switch between sections with a floating dynamic-island navbar at the bottom | I can reach every section with one thumb |
+| US-12 | search YouTube Music and download songs, playlists and albums | I can add music to my library from inside the app |
+| US-13 | let an AI sort my files into folders and clean their names, after I check the plan | my library stays tidy without renaming files by hand |
 
 ## 5. Screens
 
@@ -100,11 +104,13 @@ The mini player is the navbar's expanded "island" state, not a separate bar:
 
 ### 5.3 Screens
 
-1. **Library**: list of audio files, scanned again each time the tab opens so new and deleted files show up, search box, tap to play. Filters: On device, Online (section 3.5). A header button switches between a list and a grid of square artwork tiles; the choice is saved. A long press on a track opens a menu: play next, add to queue and, for files on the device, rename, move to a standard audio folder (Music, Podcasts, Audiobooks, Recordings, Ringtones, Alarms, Notifications) or delete. Android asks the user to allow each file change. Renaming changes the file name and the title shown in soundtrail; tags inside the file are not edited. Button to open an audio file. Gear icon opens Settings.
+1. **Library**: list of audio files, scanned again each time the tab opens so new and deleted files show up, search box, tap to play. Filters: On device, Online (section 3.5). A header button switches between a list and a grid of square artwork tiles; the choice is saved. A long press on a track opens a menu: play next, add to queue and, for files on the device, rename, move to a standard audio folder (Music, Podcasts, Audiobooks, Recordings, Ringtones, Alarms, Notifications) or delete. Android asks the user to allow each file change. Renaming changes the file name and the title shown in soundtrail; tags inside the file are not edited. Button to open an audio file. A YouTube button opens the YouTube page, a lightning button opens the Organize page (section 3.5), and the gear icon opens Settings.
 2. **Player** (Spotify-like full now-playing): large square artwork (placeholder when none), title and artist, progress bar with elapsed and remaining time, play/pause (large), previous, next, shuffle and repeat toggles, a lyrics button that swaps the artwork for the lyrics (section 3.5), and a queue button that shows the upcoming tracks as a list. A chevron at the top closes it back to the previous tab. No speed or equalizer controls here, except the small speed label described in section 3.4.
 3. **Speed**: its own page. Large readout of the current speed (for example "1.25x"), a slider from 0.5x to 2.0x in 0.01x steps, a stepper (minus/plus buttons, same step), a reset-to-1.0x button, and quick presets (0.75x, 1.0x, 1.25x, 1.5x). A note under the readout says the pitch follows the speed. Works with no track loaded: the value is saved and applies to the next track.
 4. **Equalizer**: on/off switch, preset picker, band sliders, save-preset button.
-5. **Settings** (opened from the Library gear icon): reset equalizer, reset speed, clear library cache, app version. Nothing else in v1.
+5. **YouTube** (opened from the Library header): search box that also takes a playlist or album link, filters Songs, Videos, Playlists, Albums, and result rows with a download state (download, waiting, percent, done, failed with retry). A playlist or album opens its own page listing its tracks with "Download all".
+6. **Organize** (opened from the Library header): optional instruction, Suggest button, the AI's progress, then the list of changes with Apply and Try again.
+7. **Settings** (opened from the Library gear icon): reset equalizer, reset speed, clear library cache, app version. Nothing else in v1.
 
 Layout rules: Android phone portrait first. Touch targets at least 48 dp. Text readable with the system font-size setting. The navbar respects the bottom safe-area inset. On wide screens (tablets) content is centered with a maximum width.
 
@@ -124,5 +130,5 @@ Layout rules: Android phone portrait first. Touch targets at least 48 dp. Text r
 - Playback starts within about 1 second for a local file on a mid-range phone.
 - Changing an equalizer band or the speed is audible within about 200 ms.
 - No crash when a file is corrupt or unsupported; the user sees an error message and the app keeps running.
-- Works offline, except lyrics and online music (section 3.5).
+- Works offline, except the online extras of section 3.5.
 - Respects storage and media permissions: asks only for what it needs, explains why, and works with a denial (shows a message, does not crash).
