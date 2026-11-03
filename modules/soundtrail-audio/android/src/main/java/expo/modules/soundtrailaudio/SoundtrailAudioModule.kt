@@ -179,6 +179,12 @@ class SoundtrailAudioModule : Module() {
       if (c.moveToFirst()) c.getString(0) else null
     }
 
+  private fun withExtension(target: Uri, name: String): String? {
+    val current = displayName(target) ?: return null
+    val extension = current.substringAfterLast('.', "").let { if (it.isEmpty() || it == current) "" else ".$it" }
+    return name + extension
+  }
+
   override fun definition() = ModuleDefinition {
     Name("SoundtrailAudio")
 
@@ -194,21 +200,16 @@ class SoundtrailAudioModule : Module() {
 
     AsyncFunction("renameFile") { uri: String, name: String, promise: Promise ->
       val target = Uri.parse(uri)
-      val clean = name.trim()
-      if (clean.isEmpty() || clean.contains('/')) return@AsyncFunction promise.reject(FileEditException("Invalid name"))
-      val current = displayName(target) ?: return@AsyncFunction promise.reject(FileEditException("File not found"))
-      val extension = current.substringAfterLast('.', "").let { if (it.isEmpty() || it == current) "" else ".$it" }
-      val values = ContentValues().apply { put(MediaStore.MediaColumns.DISPLAY_NAME, clean + extension) }
+      val clean = MediaPaths.fileName(name) ?: return@AsyncFunction promise.reject(FileEditException("Invalid name"))
+      val full = withExtension(target, clean) ?: return@AsyncFunction promise.reject(FileEditException("File not found"))
+      val values = ContentValues().apply { put(MediaStore.MediaColumns.DISPLAY_NAME, full) }
       update(target, values, promise)
     }
 
     AsyncFunction("moveFile") { uri: String, folder: String, promise: Promise ->
       if (Build.VERSION.SDK_INT < Build.VERSION_CODES.Q) return@AsyncFunction promise.reject(FileEditException("Moving needs Android 10"))
-      val path = folder.trim('/', ' ')
-      if (path.isEmpty() || path.split('/').any { it.isBlank() || it == ".." }) {
-        return@AsyncFunction promise.reject(FileEditException("Invalid folder"))
-      }
-      val values = ContentValues().apply { put(MediaStore.MediaColumns.RELATIVE_PATH, "$path/") }
+      val path = MediaPaths.relativePath(folder) ?: return@AsyncFunction promise.reject(FileEditException("Invalid folder"))
+      val values = ContentValues().apply { put(MediaStore.MediaColumns.RELATIVE_PATH, path) }
       update(Uri.parse(uri), values, promise)
     }
 
