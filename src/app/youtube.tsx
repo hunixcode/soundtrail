@@ -10,7 +10,7 @@ import { Icon } from '../components/Icon';
 import { PressableScale } from '../components/PressableScale';
 import { Screen } from '../components/Screen';
 import { YouTubeRow } from '../components/YouTubeRow';
-import { playlistFromLink, searchMusic, type SearchFilter, type YtList, type YtResult } from '../online/youtube';
+import { playlistFromLink, searchMusic, type SearchFilter, type YtResult } from '../online/youtube';
 import { download } from '../state/downloads';
 import { useColors } from '../theme/useTheme';
 import { layout, radius, space, type } from '../theme/tokens';
@@ -23,8 +23,6 @@ const FILTERS: { id: SearchFilter; label: string }[] = [
 ];
 
 type Search = { key: string; status: 'ready' | 'error'; items: YtResult[] };
-
-const openList = (list: YtList) => router.push({ pathname: '/playlist', params: { id: list.id, title: list.title } });
 
 export default function YouTubeScreen() {
   const colors = useColors();
@@ -51,7 +49,13 @@ export default function YouTubeScreen() {
     };
   }, [term, filter, key, link]);
 
-  const onPress = useCallback((item: YtResult) => (item.kind === 'list' ? openList(item) : download([item])), []);
+  const onPress = useCallback(
+    (item: YtResult) => {
+      if (item.kind === 'track') return download([item]);
+      router.push({ pathname: '/playlist', params: { id: item.id, title: item.id === link ? '' : item.title } });
+    },
+    [link],
+  );
 
   const loading = !!term && !link && search.key !== key;
   const items: YtResult[] = link
