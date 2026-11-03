@@ -62,6 +62,8 @@ class FileMove : Record {
 
 class FileEditException(message: String) : CodedException("FILE_EDIT_FAILED", message, null)
 
+class DownloadException(message: String) : CodedException("DOWNLOAD_FAILED", message, null)
+
 class SoundtrailAudioModule : Module() {
   private val handler = Handler(Looper.getMainLooper())
   private val background = Executors.newCachedThreadPool()
@@ -201,7 +203,7 @@ class SoundtrailAudioModule : Module() {
   override fun definition() = ModuleDefinition {
     Name("SoundtrailAudio")
 
-    Events("onStatus", "onError")
+    Events("onStatus", "onError", "onDownload")
 
     OnActivityResult { _, payload ->
       if (payload.requestCode == CONSENT_REQUEST) {
@@ -246,6 +248,19 @@ class SoundtrailAudioModule : Module() {
             runCatching { context.contentResolver.update(target, values, null, null) > 0 }.getOrDefault(false)
           })
         }
+      }
+    }
+
+    AsyncFunction("download") { id: String, url: String, folder: String, name: String, promise: Promise ->
+      if (Build.VERSION.SDK_INT < Build.VERSION_CODES.Q) return@AsyncFunction promise.reject(DownloadException("Downloading needs Android 10"))
+      val path = MediaPaths.relativePath(folder) ?: return@AsyncFunction promise.reject(DownloadException("Invalid folder"))
+      val clean = MediaPaths.fileName(name) ?: return@AsyncFunction promise.reject(DownloadException("Invalid name"))
+      if (!id.matches(MEDIA_ID) || !url.startsWith("https://")) return@AsyncFunction promise.reject(DownloadException("Invalid source"))
+      val app = context.applicationContext
+      background.execute {
+        runCatching { Downloader.fetch(app, id, url, path, clean) { sendEvent("onDownload", mapOf("id" to id, "progress" to it)) } }
+          .onSuccess { promise.resolve(it) }
+          .onFailure { promise.reject(DownloadException(it.message ?: "Download failed")) }
       }
     }
 
@@ -389,3 +404,4 @@ class SoundtrailAudioModule : Module() {
 }
 
 private const val CONSENT_REQUEST = 0x5717
+private val MEDIA_ID = Regex("[A-Za-z0-9_-]{1,64}")

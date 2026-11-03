@@ -74,9 +74,15 @@ export type FileMove = {
   name: string;
 };
 
+export type DownloadProgress = {
+  id: string;
+  progress: number;
+};
+
 type Events = {
   onStatus: (status: PlaybackStatus) => void;
   onError: (error: PlaybackError) => void;
+  onDownload: (event: DownloadProgress) => void;
 };
 
 declare class SoundtrailAudioModule extends NativeModule<Events> {
@@ -105,6 +111,7 @@ declare class SoundtrailAudioModule extends NativeModule<Events> {
   moveFile(uri: string, folder: string): Promise<boolean>;
   deleteFile(uri: string): Promise<boolean>;
   organizeFiles(moves: FileMove[]): Promise<number>;
+  download(id: string, url: string, folder: string, name: string): Promise<string>;
   enqueue(item: QueueItem, next: boolean): Promise<void>;
 }
 
