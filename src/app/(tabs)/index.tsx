@@ -6,6 +6,7 @@ import type { LibraryItem } from '../../../modules/soundtrail-audio';
 import { Chip } from '../../components/Chip';
 import { Empty } from '../../components/Empty';
 import { Icon } from '../../components/Icon';
+import { LibraryHome } from '../../components/LibraryHome';
 import { useIslandMetrics } from '../../components/IslandNav';
 import { PressableScale } from '../../components/PressableScale';
 import { Screen, useColumns } from '../../components/Screen';
@@ -19,11 +20,12 @@ import { pickFile, playList, refreshLibrary, rememberArtwork, scanLibrary, setLi
 import { useColors } from '../../theme/useTheme';
 import { layout, radius, space, type } from '../../theme/tokens';
 
-type Filter = 'device' | 'online';
+type Filter = 'home' | 'device' | 'online';
 
 const TILE_MIN = 150;
 
 const FILTERS: { id: Filter; label: string }[] = [
+  { id: 'home', label: 'Home' },
   { id: 'device', label: 'On device' },
   { id: 'online', label: 'Online' },
 ];
@@ -85,7 +87,7 @@ export default function LibraryScreen() {
   const mediaId = useApp((s) => s.status.mediaId);
   const playing = useApp((s) => s.status.isPlaying);
   const [query, setQuery] = useState('');
-  const [filter, setFilter] = useState<Filter>('device');
+  const [filter, setFilter] = useState<Filter>('home');
   const [attempt, setAttempt] = useState(0);
   const online = filter === 'online';
   const remote = useOnlineTracks(online, query.trim(), attempt);
@@ -211,6 +213,8 @@ export default function LibraryScreen() {
         />
       ) : !online && libraryStatus === 'error' ? (
         <Empty icon="alert-circle" title="Could not read your library" body="Try again in a moment." action="Retry" onAction={() => scanLibrary()} />
+      ) : filter === 'home' && !query.trim() && items.length > 0 ? (
+        <LibraryHome items={items} mediaId={mediaId} playing={playing} bottom={reserve} onPlay={playList} onLongPress={setMenuItem} />
       ) : (
         <FlatList
           key={`${view}:${columns}`}
