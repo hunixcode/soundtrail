@@ -7,6 +7,8 @@ export type LibraryItem = {
   artist: string | null;
   album: string | null;
   durationMs: number;
+  fileName?: string | null;
+  folder?: string | null;
 };
 
 export type FileDescription = {

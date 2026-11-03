@@ -3,6 +3,7 @@ package expo.modules.soundtrailaudio
 import android.content.ContentUris
 import android.content.Context
 import android.net.Uri
+import android.os.Build
 import android.provider.MediaStore
 
 object LibraryScanner {
@@ -19,7 +20,7 @@ object LibraryScanner {
       MediaStore.Audio.Media.ARTIST,
       MediaStore.Audio.Media.ALBUM,
       MediaStore.Audio.AudioColumns.DURATION
-    )
+    ) + if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) arrayOf(MediaStore.MediaColumns.RELATIVE_PATH) else emptyArray()
     val selection = "${MediaStore.Audio.Media.IS_NOTIFICATION} = 0 AND " +
       "${MediaStore.Audio.Media.IS_RINGTONE} = 0 AND " +
       "${MediaStore.Audio.Media.IS_ALARM} = 0 AND " +
@@ -32,6 +33,7 @@ object LibraryScanner {
       val artist = c.getColumnIndexOrThrow(MediaStore.Audio.Media.ARTIST)
       val album = c.getColumnIndexOrThrow(MediaStore.Audio.Media.ALBUM)
       val duration = c.getColumnIndexOrThrow(MediaStore.Audio.AudioColumns.DURATION)
+      val folder = c.getColumnIndex(MediaStore.MediaColumns.RELATIVE_PATH)
       while (c.moveToNext()) {
         val rowId = c.getLong(id)
         items.add(
@@ -41,7 +43,9 @@ object LibraryScanner {
             "title" to (c.getString(title)?.takeIf { it.isNotBlank() } ?: c.getString(name) ?: ""),
             "artist" to c.getString(artist)?.takeIf { it.isNotBlank() && it != UNKNOWN },
             "album" to c.getString(album)?.takeIf { it.isNotBlank() && it != UNKNOWN },
-            "durationMs" to c.getLong(duration).toDouble()
+            "durationMs" to c.getLong(duration).toDouble(),
+            "fileName" to c.getString(name),
+            "folder" to if (folder >= 0) c.getString(folder) else null
           )
         )
       }
