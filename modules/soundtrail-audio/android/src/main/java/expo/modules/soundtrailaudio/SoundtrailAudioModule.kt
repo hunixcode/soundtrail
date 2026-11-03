@@ -317,6 +317,11 @@ class SoundtrailAudioModule : Module() {
       ArtworkCache.load(context, uri)
     }
 
+    AsyncFunction("getCoverColor") { source: String, promise: Promise ->
+      val app = context.applicationContext
+      background.execute { promise.resolve(runCatching { CoverColor.load(app, source) }.getOrNull()) }
+    }
+
     AsyncFunction("clearArtworkCache") {
       ArtworkCache.clear(context)
     }

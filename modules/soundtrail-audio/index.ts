@@ -91,6 +91,7 @@ declare class SoundtrailAudioModule extends NativeModule<Events> {
   scanLibrary(): Promise<LibraryItem[]>;
   describe(uri: string): Promise<FileDescription>;
   getArtwork(uri: string): Promise<string | null>;
+  getCoverColor(source: string): Promise<string | null>;
   clearArtworkCache(): Promise<void>;
   getPrefs(): Promise<string | null>;
   setPrefs(json: string): Promise<void>;
