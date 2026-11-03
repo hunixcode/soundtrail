@@ -1,16 +1,29 @@
 import { useCallback, type ReactNode } from 'react';
-import { StyleSheet, View, useWindowDimensions, type StyleProp, type ViewProps, type ViewStyle } from 'react-native';
+import { Dimensions, StyleSheet, View, useWindowDimensions, type StyleProp, type ViewProps, type ViewStyle } from 'react-native';
 import { useFocusEffect } from 'expo-router';
 import Animated, { useAnimatedStyle, useSharedValue, withTiming } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
+import { createStore, useStore } from '../state/createStore';
 import { useColors } from '../theme/useTheme';
 import { layout, motion } from '../theme/tokens';
 
 export const ROW_MIN_WIDTH = 360;
 
-export function useColumns(minWidth = ROW_MIN_WIDTH) {
+const screen = Dimensions.get('screen');
+export const WIDE = Math.min(screen.width, screen.height) >= 600;
+export const PANEL_WIDTH = 380;
+
+export const panel = createStore({ open: false });
+
+export function useContentWidth() {
   const { width } = useWindowDimensions();
+  const open = useStore(panel, (s) => s.open);
+  return width - (open ? PANEL_WIDTH : 0);
+}
+
+export function useColumns(minWidth = ROW_MIN_WIDTH) {
+  const width = useContentWidth();
   const columns = Math.max(1, Math.floor((width - layout.gutter * 2) / minWidth));
   return { columns, itemWidth: Math.floor(width / columns) };
 }

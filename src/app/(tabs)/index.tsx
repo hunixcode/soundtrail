@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { ActivityIndicator, FlatList, Linking, StyleSheet, TextInput, View, useWindowDimensions } from 'react-native';
+import { ActivityIndicator, FlatList, Linking, StyleSheet, TextInput, View } from 'react-native';
 import { router, useFocusEffect } from 'expo-router';
 
 import type { LibraryItem } from '../../../modules/soundtrail-audio';
@@ -9,7 +9,7 @@ import { Icon } from '../../components/Icon';
 import { LibraryHome } from '../../components/LibraryHome';
 import { useIslandMetrics } from '../../components/IslandNav';
 import { PressableScale } from '../../components/PressableScale';
-import { Screen, useColumns } from '../../components/Screen';
+import { Screen, useColumns, useContentWidth } from '../../components/Screen';
 import { TrackRow } from '../../components/TrackRow';
 import { TrackMenu } from '../../components/TrackMenu';
 import { TrackTile } from '../../components/TrackTile';
@@ -111,7 +111,7 @@ export default function LibraryScreen() {
   const closeMenu = useCallback(() => setMenuItem(null), []);
   const view = useApp((s) => s.prefs.libraryView);
   const played = useApp((s) => s.prefs.played);
-  const { width } = useWindowDimensions();
+  const width = useContentWidth();
   const grid = view === 'grid';
   const inner = width - layout.gutter * 2;
   const rows = useColumns();

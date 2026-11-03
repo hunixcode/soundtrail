@@ -64,7 +64,7 @@ Text respects the system font scale, up to 200%. Layouts must not clip at that s
 
 - **Spacing scale:** 4, 8, 12, 16, 24, 32, 48. Use only these values.
 - **Screen gutter:** 16.
-- **Corner radius:** 12 for cards and inputs, 999 (pill) for the navbar, buttons, and chips. Artwork uses 8.
+- **Corner radius:** 6 for cards and inputs, 10 for buttons, chips and the tab indicator, 16 for the navbar (20 on tablets). Artwork uses 4. Round controls (play button, toggle, slider thumbs) stay circles.
 - **Elevation:** none. Separation comes from `bg.raised` against `bg.base` and from `border.subtle`. No shadows, except a subtle one on the navbar pill in light theme only.
 - **Icons:** a single outline icon set, 1.5 px stroke at 24 px. Filled variant only for the active state of a control (for example the play icon when playing).
 

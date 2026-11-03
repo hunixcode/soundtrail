@@ -1,5 +1,5 @@
 import { useCallback, useEffect } from 'react';
-import { Dimensions, StyleSheet, View, useWindowDimensions, type LayoutChangeEvent } from 'react-native';
+import { StyleSheet, View, type LayoutChangeEvent } from 'react-native';
 import { useTabTrigger } from 'expo-router/ui';
 import { GestureDetector, usePanGesture, useTapGesture, useExclusiveGestures } from 'react-native-gesture-handler';
 import Animated, { useAnimatedStyle, useSharedValue, withSpring, type SharedValue } from 'react-native-reanimated';
@@ -7,6 +7,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { scheduleOnRN } from 'react-native-worklets';
 
 import { currentItem, next, previous, togglePlay, useApp } from '../state/app';
+import { useStore } from '../state/createStore';
 import { rememberTab, type TabName } from '../state/nav';
 import { subtitle } from '../library/format';
 import { useColors } from '../theme/useTheme';
@@ -14,6 +15,7 @@ import { layout, motion, radius, space } from '../theme/tokens';
 import { Artwork } from './Artwork';
 import { Icon, type IconName } from './Icon';
 import { PressableScale } from './PressableScale';
+import { PANEL_WIDTH, WIDE, panel, useContentWidth } from './Screen';
 import { Txt } from './Txt';
 
 export const TABS: { name: TabName; label: string; icon: IconName }[] = [
@@ -23,8 +25,6 @@ export const TABS: { name: TabName; label: string; icon: IconName }[] = [
   { name: 'equalizer', label: 'EQ', icon: 'sliders' },
 ];
 
-const screen = Dimensions.get('screen');
-export const WIDE = Math.min(screen.width, screen.height) >= 600;
 
 const STRIP_HEIGHT = 60;
 const NAV_HEIGHT = WIDE ? 80 : layout.navHeight;
@@ -188,7 +188,8 @@ function NowPlayingStrip({ open }: { open: SharedValue<number> }) {
 
 export function IslandNav() {
   const colors = useColors();
-  const { width } = useWindowDimensions();
+  const width = useContentWidth();
+  const panelOpen = useStore(panel, (s) => s.open);
   const { trigger: playerTrigger } = useTabTrigger({ name: 'player' });
   const onPlayer = playerTrigger?.isFocused ?? false;
   const hasTrack = useApp((s) => s.status.index >= 0);
@@ -241,7 +242,7 @@ export function IslandNav() {
   });
 
   return (
-    <View pointerEvents="box-none" style={[StyleSheet.absoluteFill, styles.anchor, { paddingBottom: bottom }]}>
+    <View pointerEvents="box-none" style={[StyleSheet.absoluteFill, styles.anchor, { paddingBottom: bottom, right: panelOpen ? PANEL_WIDTH : 0 }]}>
       <Animated.View
         style={[
           styles.island,

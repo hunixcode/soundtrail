@@ -101,7 +101,7 @@ The mini player is the navbar's expanded "island" state, not a separate bar:
 - Tapping the row (not its buttons) opens the full Player screen.
 - Swiping the row left/right goes to the next/previous track.
 - On the Player tab the island collapses back to tabs only.
-- On wide screens (tablets, shortest side 600 dp or more) the island never grows this row. A small black vinyl with the current cover sits at the bottom right instead, spinning while the track plays; tapping it opens the Player. It is hidden on the Player tab.
+- On wide screens (tablets, shortest side 600 dp or more) the island never grows this row, and the navbar is larger (80 dp tall, bigger icons and labels). While a track is loaded and the user is not on the Player tab, a 380 dp **Now playing panel** opens on the right, like Spotify: cover, title and artist, progress, transport controls, a button to open the Player, and the upcoming tracks (tap to skip to one), on the cover-tinted background. Screen content and the navbar sit to its left.
 - The Player tab shows the current cover as a small round icon instead of the disc icon while a track is loaded.
 
 ### 5.3 Screens
