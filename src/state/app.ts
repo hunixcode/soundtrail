@@ -13,6 +13,7 @@ import Audio, {
 import { BUILT_IN_PRESETS, clampGain, curveFromBands, gainsForBands, type Preset } from '../audio/presets';
 import { clampSpeed } from '../audio/speed';
 import { cleanFileName } from '../library/format';
+import type { Move } from '../online/organize';
 import { createStore, useStore } from './createStore';
 import { DEFAULT_PREFS, parsePrefs, type LibraryView, type Prefs, type ThemePreference } from './prefs';
 
@@ -230,6 +231,15 @@ export function renameTrack(item: LibraryItem, name: string) {
 }
 
 export const moveTrack = (item: LibraryItem, folder: string) => editFile(() => Audio.moveFile(item.uri, folder));
+
+export async function organizeLibrary(moves: Move[]) {
+  let count = 0;
+  await editFile(async () => {
+    count = await Audio.organizeFiles(moves.map(({ item, folder, name }) => ({ uri: item.uri, folder, name })));
+    return count > 0;
+  });
+  return count;
+}
 export const deleteTrack = (item: LibraryItem) => editFile(() => Audio.deleteFile(item.uri));
 
 export function togglePlay() {

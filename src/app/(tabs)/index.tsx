@@ -127,7 +127,7 @@ export default function LibraryScreen() {
   return (
     <Screen>
       <View style={styles.header}>
-        <Txt variant="title" accessibilityRole="header">
+        <Txt variant="title" accessibilityRole="header" numberOfLines={1} style={styles.title}>
           Library
         </Txt>
         <View style={styles.headerActions}>
@@ -143,6 +143,9 @@ export default function LibraryScreen() {
           </PressableScale>
           <PressableScale onPress={() => router.push('/youtube')} accessibilityLabel="Download from YouTube" style={styles.iconButton}>
             <Icon name="youtube" size={22} />
+          </PressableScale>
+          <PressableScale onPress={() => router.push('/organize')} accessibilityLabel="Organize with AI" style={styles.iconButton}>
+            <Icon name="zap" size={22} />
           </PressableScale>
           <PressableScale onPress={() => router.push('/settings')} accessibilityLabel="Settings" style={styles.iconButton}>
             <Icon name="settings" size={22} />
@@ -253,7 +256,8 @@ const styles = StyleSheet.create({
     paddingTop: space.lg,
     paddingBottom: space.md,
   },
-  headerActions: { flexDirection: 'row', gap: space.xs },
+  title: { flexShrink: 1 },
+  headerActions: { flexDirection: 'row' },
   grid: { gap: space.xl, paddingTop: space.xs },
   gridRow: { gap: space.lg, paddingHorizontal: layout.gutter },
   iconButton: { width: 44, height: 44, alignItems: 'center', justifyContent: 'center' },
