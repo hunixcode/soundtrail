@@ -19,11 +19,14 @@ describe('library home', () => {
     item('b', { artist: 'air', album: 'Moon Safari', genre: 'Electronic', addedAt: 9 }),
     item('c', { artist: 'Björk', album: 'Post', genre: 'Pop', addedAt: 5 }),
     item('d', { artist: '  ', genre: null }),
+    item('e', { album: 'Download', folder: 'Download/' }),
+    item('f', { album: 'soundtrail', folder: 'Music/soundtrail/' }),
   ];
 
   it('groups by genre, artist and album, biggest first, ignoring case and blanks', () => {
     const home = buildHome(items);
     expect(home.recent.map((i) => i.id)).toEqual(['b', 'c', 'a']);
+    expect(home.played).toEqual([]);
     expect(home.genres.map((g) => [g.title, g.subtitle])).toEqual([
       ['Electronic', '2 tracks'],
       ['Pop', '1 track'],
@@ -33,6 +36,10 @@ describe('library home', () => {
       ['Moon Safari', 'Air'],
       ['Post', 'Björk'],
     ]);
+  });
+
+  it('lists recently played tracks in play order, skipping missing ones', () => {
+    expect(buildHome(items, ['c', 'gone', 'a']).played.map((i) => i.id)).toEqual(['c', 'a']);
   });
 
   it('greets by time of day', () => {

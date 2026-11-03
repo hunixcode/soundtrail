@@ -16,7 +16,10 @@ export type Prefs = {
   repeat: RepeatMode;
   libraryView: LibraryView;
   renamed: Record<string, string>;
+  played: string[];
 };
+
+export const MAX_PLAYED = 30;
 
 export const DEFAULT_PREFS: Prefs = {
   speed: 1,
@@ -29,6 +32,7 @@ export const DEFAULT_PREFS: Prefs = {
   repeat: 'off',
   libraryView: 'list',
   renamed: {},
+  played: [],
 };
 
 const isRecord = (value: unknown): value is Record<string, unknown> =>
@@ -84,5 +88,8 @@ export function parsePrefs(json: string | null): Prefs {
     repeat: raw.repeat === 'all' || raw.repeat === 'one' || raw.repeat === 'off' ? raw.repeat : DEFAULT_PREFS.repeat,
     libraryView: raw.libraryView === 'grid' || raw.libraryView === 'list' ? raw.libraryView : DEFAULT_PREFS.libraryView,
     renamed: parseRenamed(raw.renamed),
+    played: Array.isArray(raw.played)
+      ? [...new Set(raw.played.filter((id): id is string => typeof id === 'string'))].slice(0, MAX_PLAYED)
+      : DEFAULT_PREFS.played,
   };
 }

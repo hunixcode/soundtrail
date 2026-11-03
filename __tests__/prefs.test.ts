@@ -21,6 +21,7 @@ describe('parsePrefs', () => {
       repeat: 'one' as const,
       libraryView: 'grid' as const,
       renamed: { 'audio:1': 'New name' },
+      played: ['audio:2', 'audio:1'],
     };
     expect(parsePrefs(JSON.stringify(saved))).toEqual(saved);
   });

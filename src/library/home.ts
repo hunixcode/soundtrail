@@ -20,15 +20,22 @@ function groups(items: LibraryItem[], name: (item: LibraryItem) => string | null
     .map(([key, list]): Group => ({ key, title: name(list[0])!.trim(), subtitle: describe(list), items: list }));
 }
 
-export function buildHome(items: LibraryItem[]) {
+const lastSegment = (folder: string | null | undefined) => folder?.replace(/\/+$/, '').split('/').pop()?.toLocaleLowerCase();
+
+export const realAlbum = (item: LibraryItem) =>
+  item.album && item.album.trim().toLocaleLowerCase() !== lastSegment(item.folder) ? item.album : null;
+
+export function buildHome(items: LibraryItem[], played: string[] = []) {
+  const byId = new Map(items.map((item) => [item.id, item]));
   return {
+    played: played.flatMap((id) => byId.get(id) ?? []).slice(0, SHELF_SIZE),
     recent: items
       .filter((item) => item.addedAt)
       .sort((a, b) => (b.addedAt ?? 0) - (a.addedAt ?? 0))
       .slice(0, SHELF_SIZE),
     genres: groups(items, (item) => item.genre, count),
     artists: groups(items, (item) => item.artist, count),
-    albums: groups(items, (item) => item.album, (list) => list[0].artist ?? count(list)),
+    albums: groups(items, realAlbum, (list) => list[0].artist ?? count(list)),
   };
 }
 

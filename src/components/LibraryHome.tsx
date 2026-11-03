@@ -13,6 +13,7 @@ const CARD = 156;
 
 type Props = {
   items: LibraryItem[];
+  played: string[];
   mediaId: string | null;
   playing: boolean;
   bottom: number;
@@ -20,39 +21,52 @@ type Props = {
   onLongPress: (item: LibraryItem) => void;
 };
 
-export function LibraryHome({ items, mediaId, playing, bottom, onPlay, onLongPress }: Props) {
-  const home = useMemo(() => buildHome(items), [items]);
+export function LibraryHome({ items, played, mediaId, playing, bottom, onPlay, onLongPress }: Props) {
+  const home = useMemo(() => buildHome(items, played), [items, played]);
 
   return (
     <ScrollView contentContainerStyle={[styles.content, { paddingBottom: bottom }]}>
       <Txt variant="headline" accessibilityRole="header" style={styles.greeting}>
         {greeting(new Date().getHours())}
       </Txt>
-      {home.recent.length > 0 ? (
-        <Shelf title="Recently added">
-          <FlatList
-            horizontal
-            data={home.recent}
-            keyExtractor={(item) => item.id}
-            showsHorizontalScrollIndicator={false}
-            contentContainerStyle={styles.row}
-            renderItem={({ item, index }) => (
-              <TrackTile
-                item={item}
-                size={CARD}
-                active={item.id === mediaId}
-                playing={playing}
-                onPress={() => onPlay(home.recent, index)}
-                onLongPress={onLongPress}
-              />
-            )}
-          />
-        </Shelf>
-      ) : null}
+      <Tracks title="Recently played" items={home.played} mediaId={mediaId} playing={playing} onPlay={onPlay} onLongPress={onLongPress} />
+      <Tracks title="Recently added" items={home.recent} mediaId={mediaId} playing={playing} onPlay={onPlay} onLongPress={onLongPress} />
       <Groups title="Genres" groups={home.genres} onPlay={onPlay} />
       <Groups title="Artists" groups={home.artists} round onPlay={onPlay} />
       <Groups title="Albums" groups={home.albums} onPlay={onPlay} />
     </ScrollView>
+  );
+}
+
+function Tracks({
+  title,
+  items,
+  mediaId,
+  playing,
+  onPlay,
+  onLongPress,
+}: Omit<Props, 'played' | 'bottom'> & { title: string }) {
+  if (items.length === 0) return null;
+  return (
+    <Shelf title={title}>
+      <FlatList
+        horizontal
+        data={items}
+        keyExtractor={(item) => item.id}
+        showsHorizontalScrollIndicator={false}
+        contentContainerStyle={styles.row}
+        renderItem={({ item, index }) => (
+          <TrackTile
+            item={item}
+            size={CARD}
+            active={item.id === mediaId}
+            playing={playing}
+            onPress={() => onPlay(items, index)}
+            onLongPress={onLongPress}
+          />
+        )}
+      />
+    </Shelf>
   );
 }
 

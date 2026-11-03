@@ -110,6 +110,7 @@ export default function LibraryScreen() {
   const [menuItem, setMenuItem] = useState<LibraryItem | null>(null);
   const closeMenu = useCallback(() => setMenuItem(null), []);
   const view = useApp((s) => s.prefs.libraryView);
+  const played = useApp((s) => s.prefs.played);
   const { width } = useWindowDimensions();
   const grid = view === 'grid';
   const inner = width - layout.gutter * 2;
@@ -214,7 +215,7 @@ export default function LibraryScreen() {
       ) : !online && libraryStatus === 'error' ? (
         <Empty icon="alert-circle" title="Could not read your library" body="Try again in a moment." action="Retry" onAction={() => scanLibrary()} />
       ) : filter === 'home' && !query.trim() && items.length > 0 ? (
-        <LibraryHome items={items} mediaId={mediaId} playing={playing} bottom={reserve} onPlay={playList} onLongPress={setMenuItem} />
+        <LibraryHome items={items} played={played} mediaId={mediaId} playing={playing} bottom={reserve} onPlay={playList} onLongPress={setMenuItem} />
       ) : (
         <FlatList
           key={`${view}:${columns}`}

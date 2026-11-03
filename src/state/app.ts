@@ -15,7 +15,7 @@ import { clampSpeed } from '../audio/speed';
 import { cleanFileName } from '../library/format';
 import type { Move } from '../online/organize';
 import { createStore, useStore } from './createStore';
-import { DEFAULT_PREFS, parsePrefs, type LibraryView, type Prefs, type ThemePreference } from './prefs';
+import { DEFAULT_PREFS, MAX_PLAYED, parsePrefs, type LibraryView, type Prefs, type ThemePreference } from './prefs';
 
 export type LibraryStatus = 'idle' | 'loading' | 'ready' | 'denied' | 'error';
 
@@ -97,7 +97,14 @@ let started = false;
 export async function start() {
   if (started) return;
   started = true;
-  Audio.addListener('onStatus', (status) => store.set({ status }));
+  Audio.addListener('onStatus', (status) => {
+    const previous = store.get().status.mediaId;
+    store.set({ status });
+    if (status.mediaId && status.mediaId !== previous) {
+      const { played } = store.get().prefs;
+      updatePrefs({ played: [status.mediaId, ...played.filter((id) => id !== status.mediaId)].slice(0, MAX_PLAYED) });
+    }
+  });
   Audio.addListener('onError', (error) => store.set({ error }));
   const prefs = parsePrefs(await Audio.getPrefs().catch(() => null));
   store.set({ prefs });
