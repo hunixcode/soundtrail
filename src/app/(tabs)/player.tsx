@@ -7,27 +7,22 @@ import Animated, { FadeIn, FadeOut, useAnimatedStyle, useSharedValue, withDelay,
 import type { LibraryItem } from '../../../modules/soundtrail-audio';
 import { Artwork } from '../../components/Artwork';
 import { Vinyl } from '../../components/Vinyl';
-import { Icon, type IconName } from '../../components/Icon';
+import { Icon } from '../../components/Icon';
 import { useIslandMetrics } from '../../components/IslandNav';
 import { LyricsView } from '../../components/LyricsView';
 import { PressableScale } from '../../components/PressableScale';
 import { Screen } from '../../components/Screen';
+import { Controls, Progress } from '../../components/PlayerControls';
 import { Slider } from '../../components/Slider';
 import { TrackRow } from '../../components/TrackRow';
 import { Txt } from '../../components/Txt';
 import { FINE_SPEED, SPEED_STEP, formatSpeed } from '../../audio/speed';
-import { formatTime, subtitle } from '../../library/format';
+import { subtitle } from '../../library/format';
 import {
   currentItem,
-  cycleRepeat,
   loadCoverColor,
-  next,
-  previous,
-  seekTo,
   setSpeed,
   skipTo,
-  togglePlay,
-  toggleShuffle,
   useApp,
 } from '../../state/app';
 import { TAB_HREF, previousTab } from '../../state/nav';
@@ -268,90 +263,6 @@ function SpeedBadge({
   );
 }
 
-function Progress() {
-  const position = useApp((s) => s.status.positionMs);
-  const duration = useApp((s) => s.status.durationMs);
-  const [preview, setPreview] = useState<number | null>(null);
-  const ratio = duration > 0 ? Math.min(1, position / duration) : 0;
-  const shown = preview ?? position;
-
-  return (
-    <View style={styles.progress}>
-      <Slider
-        value={ratio}
-        steps={1000}
-        onChange={(r) => setPreview(r * duration)}
-        onCommit={(r) => {
-          setPreview(null);
-          if (duration > 0) seekTo(r * duration);
-        }}
-        label="Playback position"
-        valueText={`${formatTime(shown)} of ${formatTime(duration)}`}
-      />
-      <View style={styles.times}>
-        <Txt variant="mono" tone="secondary">
-          {formatTime(shown)}
-        </Txt>
-        <Txt variant="mono" tone="secondary">
-          -{formatTime(Math.max(0, duration - shown))}
-        </Txt>
-      </View>
-    </View>
-  );
-}
-
-function ToggleButton({ icon, active, label, onPress, badge }: { icon: IconName; active: boolean; label: string; onPress: () => void; badge?: string }) {
-  const colors = useColors();
-  return (
-    <PressableScale onPress={onPress} accessibilityLabel={label} accessibilityState={{ selected: active }} style={styles.control}>
-      <Icon name={icon} size={20} color={active ? 'fgPrimary' : 'fgTertiary'} />
-      {badge ? (
-        <View style={[styles.repeatBadge, { backgroundColor: colors.fgPrimary }]}>
-          <Txt variant="mono" tone="inverse" style={styles.repeatBadgeText}>
-            {badge}
-          </Txt>
-        </View>
-      ) : null}
-      {active ? <View style={[styles.dot, { backgroundColor: colors.fgPrimary }]} /> : null}
-    </PressableScale>
-  );
-}
-
-function Controls() {
-  const colors = useColors();
-  const playing = useApp((s) => s.status.playWhenReady);
-  const shuffle = useApp((s) => s.prefs.shuffle);
-  const repeat = useApp((s) => s.prefs.repeat);
-
-  return (
-    <View style={styles.controls}>
-      <ToggleButton icon="shuffle" active={shuffle} label="Shuffle" onPress={toggleShuffle} />
-      <PressableScale onPress={previous} accessibilityLabel="Previous track" style={styles.control}>
-        <Icon name="skip-back" size={28} />
-      </PressableScale>
-      <PressableScale
-        onPress={togglePlay}
-        accessibilityLabel={playing ? 'Pause' : 'Play'}
-        style={[styles.play, { backgroundColor: colors.fgPrimary }]}
-      >
-        <Animated.View key={playing ? 'pause' : 'play'} entering={FadeIn.duration(150)}>
-          <Icon name={playing ? 'pause' : 'play'} size={30} color="fgInverse" />
-        </Animated.View>
-      </PressableScale>
-      <PressableScale onPress={next} accessibilityLabel="Next track" style={styles.control}>
-        <Icon name="skip-forward" size={28} />
-      </PressableScale>
-      <ToggleButton
-        icon="repeat"
-        active={repeat !== 'off'}
-        label={repeat === 'one' ? 'Repeat one' : repeat === 'all' ? 'Repeat all' : 'Repeat off'}
-        onPress={cycleRepeat}
-        badge={repeat === 'one' ? '1' : undefined}
-      />
-    </View>
-  );
-}
-
 function Queue() {
   const queue = useApp((s) => s.queue);
   const mediaId = useApp((s) => s.status.mediaId);
@@ -416,23 +327,6 @@ const styles = StyleSheet.create({
     paddingTop: space.lg,
   },
   badgeFace: { position: 'absolute', left: 0, right: 0, bottom: 0, height: BADGE_HEIGHT - 2, alignItems: 'center', justifyContent: 'center' },
-  progress: { gap: 0 },
-  times: { flexDirection: 'row', justifyContent: 'space-between', marginTop: -space.sm },
-  controls: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingBottom: space.sm },
-  control: { width: 52, height: 52, alignItems: 'center', justifyContent: 'center' },
-  play: { width: 72, height: 72, borderRadius: 36, alignItems: 'center', justifyContent: 'center' },
-  dot: { position: 'absolute', bottom: 6, width: 4, height: 4, borderRadius: 2 },
-  repeatBadge: {
-    position: 'absolute',
-    top: 8,
-    right: 8,
-    width: 14,
-    height: 14,
-    borderRadius: 7,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  repeatBadgeText: { fontSize: 9, lineHeight: 12 },
   empty: { flex: 1, alignItems: 'center', justifyContent: 'center', gap: space.md, paddingHorizontal: space.xxl },
   emptyArt: { width: 120, height: 120, borderRadius: radius.artwork, alignItems: 'center', justifyContent: 'center' },
   centerText: { textAlign: 'center' },
