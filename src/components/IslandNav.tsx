@@ -1,5 +1,5 @@
 import { useCallback, useEffect } from 'react';
-import { StyleSheet, View, useWindowDimensions, type LayoutChangeEvent } from 'react-native';
+import { Dimensions, StyleSheet, View, useWindowDimensions, type LayoutChangeEvent } from 'react-native';
 import { useTabTrigger } from 'expo-router/ui';
 import { GestureDetector, usePanGesture, useTapGesture, useExclusiveGestures } from 'react-native-gesture-handler';
 import Animated, { useAnimatedStyle, useSharedValue, withSpring, type SharedValue } from 'react-native-reanimated';
@@ -15,7 +15,6 @@ import { Artwork } from './Artwork';
 import { Icon, type IconName } from './Icon';
 import { PressableScale } from './PressableScale';
 import { Txt } from './Txt';
-import { Vinyl } from './Vinyl';
 
 export const TABS: { name: TabName; label: string; icon: IconName }[] = [
   { name: 'library', label: 'Library', icon: 'music' },
@@ -24,24 +23,23 @@ export const TABS: { name: TabName; label: string; icon: IconName }[] = [
   { name: 'equalizer', label: 'EQ', icon: 'sliders' },
 ];
 
+const screen = Dimensions.get('screen');
+export const WIDE = Math.min(screen.width, screen.height) >= 600;
+
 const STRIP_HEIGHT = 60;
-const TAB_COMPACT = 52;
-const TAB_ROW_PADDING = space.sm;
-
-const WIDE_MIN = 600;
-const DISC = 72;
-
-export function useWide() {
-  const { width, height } = useWindowDimensions();
-  return Math.min(width, height) >= WIDE_MIN;
-}
+const NAV_HEIGHT = WIDE ? 80 : layout.navHeight;
+const TAB_HEIGHT = WIDE ? 60 : 48;
+const TAB_COMPACT = WIDE ? 68 : 52;
+const GLYPH = WIDE ? 26 : 20;
+const TAB_ROW_PADDING = WIDE ? space.md : space.sm;
+const ISLAND_RADIUS = WIDE ? 20 : 16;
+const COLLAPSED_MAX = WIDE ? 560 : 380;
 
 export function useIslandMetrics(onPlayer: boolean) {
   const insets = useSafeAreaInsets();
-  const wide = useWide();
   const hasTrack = useApp((s) => s.status.index >= 0);
-  const expanded = hasTrack && !onPlayer && !wide;
-  const height = layout.navHeight + (expanded ? STRIP_HEIGHT : 0);
+  const expanded = hasTrack && !onPlayer && !WIDE;
+  const height = NAV_HEIGHT + (expanded ? STRIP_HEIGHT : 0);
   return { expanded, height, bottom: insets.bottom + layout.navGap, reserve: insets.bottom + layout.navGap * 2 + height };
 }
 
@@ -102,9 +100,9 @@ function TabItem({ name, label, icon, index, nav, progress, labelWidths, onFocus
         accessibilityState={{ selected: focused }}
         style={styles.tab}
       >
-        <Animated.View style={glyph}>{name === 'player' ? <PlayerGlyph icon={icon} /> : <Icon name={icon} size={20} />}</Animated.View>
+        <Animated.View style={glyph}>{name === 'player' ? <PlayerGlyph icon={icon} /> : <Icon name={icon} size={GLYPH} />}</Animated.View>
         <Animated.View style={[styles.label, text]}>
-          <Txt variant="label" numberOfLines={1} onLayout={onLabelLayout}>
+          <Txt variant="label" numberOfLines={1} onLayout={onLabelLayout} style={WIDE && styles.wideLabel}>
             {label}
           </Txt>
         </Animated.View>
@@ -115,27 +113,11 @@ function TabItem({ name, label, icon, index, nav, progress, labelWidths, onFocus
 
 function PlayerGlyph({ icon }: { icon: IconName }) {
   const item = useApp(currentItem);
-  if (!item) return <Icon name={icon} size={20} />;
+  if (!item) return <Icon name={icon} size={GLYPH} />;
   return (
     <View style={styles.glyphArt}>
-      <Artwork item={item} size={20} />
+      <Artwork item={item} size={GLYPH} />
     </View>
-  );
-}
-
-function NowPlayingDisc({ bottom }: { bottom: number }) {
-  const item = useApp(currentItem);
-  const playing = useApp((s) => s.status.isPlaying);
-  const { switchTab } = useTabTrigger({ name: 'player' });
-  if (!item) return null;
-  return (
-    <PressableScale
-      onPress={() => switchTab('player', {})}
-      accessibilityLabel={`Now playing: ${item.title}. Opens the player.`}
-      style={[styles.disc, { bottom }]}
-    >
-      <Vinyl item={item} size={DISC} spinning={playing} labelRatio={0.5} />
-    </PressableScale>
   );
 }
 
@@ -211,9 +193,8 @@ export function IslandNav() {
   const onPlayer = playerTrigger?.isFocused ?? false;
   const hasTrack = useApp((s) => s.status.index >= 0);
   const { expanded, bottom } = useIslandMetrics(onPlayer);
-  const wide = useWide();
 
-  const collapsedWidth = Math.min(width - layout.gutter * 2, 380);
+  const collapsedWidth = Math.min(width - layout.gutter * 2, COLLAPSED_MAX);
   const expandedWidth = Math.min(width - layout.gutter * 2, 520);
   const open = useSharedValue(expanded ? 1 : 0);
   const nav = useSharedValue<Nav>({ from: -1, to: -1 });
@@ -240,7 +221,7 @@ export function IslandNav() {
 
   const container = useAnimatedStyle(() => ({
     width: collapsedWidth + (expandedWidth - collapsedWidth) * open.value,
-    height: layout.navHeight + STRIP_HEIGHT * open.value,
+    height: NAV_HEIGHT + STRIP_HEIGHT * open.value,
   }));
 
   const indicator = useAnimatedStyle(() => {
@@ -268,7 +249,7 @@ export function IslandNav() {
           container,
         ]}
       >
-        {hasTrack && !wide ? (
+        {hasTrack && !WIDE ? (
           <View pointerEvents={expanded ? 'auto' : 'none'}>
             <NowPlayingStrip open={open} />
           </View>
@@ -288,17 +269,16 @@ export function IslandNav() {
           ))}
         </View>
       </Animated.View>
-      {wide && hasTrack && !onPlayer ? <NowPlayingDisc bottom={bottom - (DISC - layout.navHeight) / 2} /> : null}
     </View>
   );
 }
 
 const styles = StyleSheet.create({
   anchor: { justifyContent: 'flex-end', alignItems: 'center' },
-  glyphArt: { width: 20, height: 20, borderRadius: 10, overflow: 'hidden' },
-  disc: { position: 'absolute', right: layout.gutter * 2, borderRadius: DISC / 2 },
+  glyphArt: { width: GLYPH, height: GLYPH, borderRadius: GLYPH / 2, overflow: 'hidden' },
+  wideLabel: { fontSize: 15, lineHeight: 20 },
   island: {
-    borderRadius: 32,
+    borderRadius: ISLAND_RADIUS,
     overflow: 'hidden',
     borderWidth: StyleSheet.hairlineWidth,
     justifyContent: 'flex-end',
@@ -315,19 +295,19 @@ const styles = StyleSheet.create({
   stripText: { flex: 1, gap: 2 },
   stripButton: { width: 44, height: 44, alignItems: 'center', justifyContent: 'center' },
   tabs: {
-    height: layout.navHeight,
+    height: NAV_HEIGHT,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
     paddingHorizontal: TAB_ROW_PADDING,
   },
-  indicator: { position: 'absolute', left: 0, height: 48, borderRadius: radius.pill },
-  tabBox: { height: 48, borderRadius: radius.pill, overflow: 'hidden' },
+  indicator: { position: 'absolute', left: 0, height: TAB_HEIGHT, borderRadius: radius.pill },
+  tabBox: { height: TAB_HEIGHT, borderRadius: radius.pill, overflow: 'hidden' },
   tab: {
-    height: 48,
+    height: TAB_HEIGHT,
     flexDirection: 'row',
     alignItems: 'center',
-    paddingLeft: (TAB_COMPACT - 20) / 2,
+    paddingLeft: (TAB_COMPACT - GLYPH) / 2,
   },
-  label: { position: 'absolute', left: (TAB_COMPACT - 20) / 2 + 20 + space.sm, width: 160, alignItems: 'flex-start' },
+  label: { position: 'absolute', left: (TAB_COMPACT - GLYPH) / 2 + GLYPH + space.sm, width: 160, alignItems: 'flex-start' },
 });
