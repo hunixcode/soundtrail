@@ -1,6 +1,6 @@
 import { describe, expect, it, jest } from '@jest/globals';
 
-import { download, downloadFolder, fileName } from '../src/state/downloads';
+import { byStatus, download, downloadFolder, fileName, type Download } from '../src/state/downloads';
 import type { YtTrack } from '../src/online/youtube';
 
 const mockCalls: string[] = [];
@@ -34,6 +34,16 @@ const track = (id: string, artist: string | null = 'Artist'): YtTrack => ({
 const settle = () => new Promise((resolve) => setTimeout(resolve, 0));
 
 describe('downloads', () => {
+  it('lists active downloads first and finished ones last', () => {
+    const job = (id: string, status: Download['status']): Download => ({ track: track(id), folder: 'Music', status, progress: 0 });
+    expect(byStatus({ a: job('a', 'done'), b: job('b', 'failed'), c: job('c', 'queued'), d: job('d', 'active') }).map((j) => j.status)).toEqual([
+      'active',
+      'queued',
+      'failed',
+      'done',
+    ]);
+  });
+
   it('names files and folders safely', () => {
     expect(fileName(track('a'))).toBe('Artist - Songa');
     expect(fileName(track('b', null))).toBe('Songb');
@@ -50,6 +60,6 @@ describe('downloads', () => {
     mockFailing.clear();
     download([track('a'), track('b')]);
     for (let i = 0; i < 5; i++) await settle();
-    expect(mockCalls.slice(2)).toEqual(['b|Music/soundtrail|Artist - Songb']);
+    expect(mockCalls.slice(2)).toEqual(['b|Music/soundtrail/Mix|Artist - Songb']);
   });
 });

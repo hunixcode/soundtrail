@@ -9,9 +9,10 @@ import { Empty } from '../components/Empty';
 import { Icon } from '../components/Icon';
 import { PressableScale } from '../components/PressableScale';
 import { Screen, useColumns } from '../components/Screen';
+import { Txt } from '../components/Txt';
 import { YouTubeRow } from '../components/YouTubeRow';
 import { playlistFromLink, searchMusic, type SearchFilter, type YtResult } from '../online/youtube';
-import { download } from '../state/downloads';
+import { byStatus, download, useDownloads, type DownloadStatus } from '../state/downloads';
 import { useColors } from '../theme/useTheme';
 import { layout, radius, space, type } from '../theme/tokens';
 
@@ -24,6 +25,10 @@ const FILTERS: { id: SearchFilter; label: string }[] = [
 
 type Search = { key: string; status: 'ready' | 'error'; items: YtResult[] };
 
+type Tab = 'search' | 'downloads';
+
+const STATUS_LABEL: Record<DownloadStatus, string> = { active: 'in progress', queued: 'waiting', failed: 'failed', done: 'done' };
+
 export default function YouTubeScreen() {
   const colors = useColors();
   const insets = useSafeAreaInsets();
@@ -32,6 +37,13 @@ export default function YouTubeScreen() {
   const [filter, setFilter] = useState<SearchFilter>('songs');
   const [attempt, setAttempt] = useState(0);
   const [search, setSearch] = useState<Search>({ key: '', status: 'ready', items: [] });
+  const [tab, setTab] = useState<Tab>('search');
+  const jobs = byStatus(useDownloads());
+  const counts = (Object.keys(STATUS_LABEL) as DownloadStatus[])
+    .map((status) => [status, jobs.filter((job) => job.status === status).length] as const)
+    .filter(([, n]) => n > 0)
+    .map(([status, n]) => `${n} ${STATUS_LABEL[status]}`)
+    .join(' · ');
   const term = query.trim();
   const link = playlistFromLink(term);
   const key = `${filter}:${term}:${attempt}`;
@@ -68,6 +80,40 @@ export default function YouTubeScreen() {
   return (
     <Screen>
       <BackHeader title="YouTube" />
+      <View style={styles.filters}>
+        <Chip label="Search" selected={tab === 'search'} onPress={() => setTab('search')} />
+        <Chip
+          label={jobs.length ? `Downloads · ${jobs.length}` : 'Downloads'}
+          selected={tab === 'downloads'}
+          onPress={() => setTab('downloads')}
+        />
+      </View>
+      {tab === 'downloads' ? (
+        <FlatList
+          data={jobs.map((job) => job.track)}
+          keyExtractor={(item) => item.id}
+          key={`downloads:${columns}`}
+          numColumns={columns}
+          renderItem={({ item }) => (
+            <View style={{ width: itemWidth }}>
+              <YouTubeRow item={item} onPress={onPress} />
+            </View>
+          )}
+          contentContainerStyle={{ paddingBottom: insets.bottom + space.xl }}
+          initialNumToRender={14}
+          ListHeaderComponent={
+            jobs.length ? (
+              <Txt tone="secondary" style={styles.summary}>
+                {counts}
+              </Txt>
+            ) : undefined
+          }
+          ListEmptyComponent={
+            <Empty icon="download" title="No downloads yet" body="Songs you download from Search show up here with their progress." />
+          }
+        />
+      ) : (
+      <>
       <View style={[styles.search, { backgroundColor: colors.bgSunken }]}>
         <Icon name="search" size={18} color="fgTertiary" />
         <TextInput
@@ -130,6 +176,8 @@ export default function YouTubeScreen() {
           }
         />
       )}
+      </>
+      )}
     </Screen>
   );
 }
@@ -145,6 +193,7 @@ const styles = StyleSheet.create({
     gap: space.sm,
   },
   input: { flex: 1, height: 48, paddingVertical: 0 },
+  summary: { paddingHorizontal: layout.gutter, paddingBottom: space.md },
   clear: { width: 44, height: 44, alignItems: 'center', justifyContent: 'center' },
   filters: { flexDirection: 'row', flexWrap: 'wrap', gap: space.sm, paddingHorizontal: layout.gutter, paddingVertical: space.md },
   center: { flex: 1, alignItems: 'center', justifyContent: 'center' },

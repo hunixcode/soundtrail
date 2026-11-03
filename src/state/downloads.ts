@@ -13,6 +13,12 @@ const store = createStore<{ jobs: Record<string, Download> }>({ jobs: {} });
 
 export const useDownload = (id: string) => useStore(store, (s) => s.jobs[id]);
 
+export const useDownloads = () => useStore(store, (s) => s.jobs);
+
+const ORDER: Record<DownloadStatus, number> = { active: 0, queued: 1, failed: 2, done: 3 };
+
+export const byStatus = (jobs: Record<string, Download>) => Object.values(jobs).sort((a, b) => ORDER[a.status] - ORDER[b.status]);
+
 export const downloadFolder = (list?: string) => {
   const root = `Music/${cleanFileName(appName) || 'Downloads'}`;
   const sub = list ? cleanFileName(list) : '';
@@ -33,12 +39,12 @@ export function download(tracks: YtTrack[], list?: string) {
     listening = true;
     Audio.addListener('onDownload', ({ id, progress }) => patch(id, { progress }));
   }
-  const folder = downloadFolder(list);
   store.set((s) => {
     const jobs = { ...s.jobs };
     for (const track of tracks) {
-      const status = jobs[track.id]?.status;
-      if (!status || status === 'failed') jobs[track.id] = { track, folder, status: 'queued', progress: 0 };
+      const job = jobs[track.id];
+      const folder = list || !job ? downloadFolder(list) : job.folder;
+      if (!job || job.status === 'failed') jobs[track.id] = { track, folder, status: 'queued', progress: 0 };
     }
     return { jobs };
   });
