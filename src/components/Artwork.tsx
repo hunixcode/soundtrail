@@ -8,14 +8,23 @@ import { useColors } from '../theme/useTheme';
 import { radius } from '../theme/tokens';
 import { Icon } from './Icon';
 
-export function Artwork({ item, size }: { item: Pick<LibraryItem, 'uri'> | null; size: number }) {
+export function Artwork({
+  item,
+  size,
+  url,
+}: {
+  item: Pick<LibraryItem, 'uri'> | null;
+  size: number;
+  url?: string | null;
+}) {
   const colors = useColors();
   const uri = item?.uri;
-  const source = useApp((s) => (uri ? s.artwork[uri] : null));
+  const stored = useApp((s) => (uri ? s.artwork[uri] : null));
+  const source = url === undefined ? stored : url;
 
   useEffect(() => {
-    if (uri) loadArtwork(uri);
-  }, [uri]);
+    if (uri && url === undefined) loadArtwork(uri);
+  }, [uri, url]);
 
   return (
     <View
