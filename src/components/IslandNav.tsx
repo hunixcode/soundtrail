@@ -15,6 +15,7 @@ import { Artwork } from './Artwork';
 import { Icon, type IconName } from './Icon';
 import { PressableScale } from './PressableScale';
 import { Txt } from './Txt';
+import { Vinyl } from './Vinyl';
 
 export const TABS: { name: TabName; label: string; icon: IconName }[] = [
   { name: 'library', label: 'Library', icon: 'music' },
@@ -27,10 +28,19 @@ const STRIP_HEIGHT = 60;
 const TAB_COMPACT = 52;
 const TAB_ROW_PADDING = space.sm;
 
+const WIDE_MIN = 600;
+const DISC = 72;
+
+export function useWide() {
+  const { width, height } = useWindowDimensions();
+  return Math.min(width, height) >= WIDE_MIN;
+}
+
 export function useIslandMetrics(onPlayer: boolean) {
   const insets = useSafeAreaInsets();
+  const wide = useWide();
   const hasTrack = useApp((s) => s.status.index >= 0);
-  const expanded = hasTrack && !onPlayer;
+  const expanded = hasTrack && !onPlayer && !wide;
   const height = layout.navHeight + (expanded ? STRIP_HEIGHT : 0);
   return { expanded, height, bottom: insets.bottom + layout.navGap, reserve: insets.bottom + layout.navGap * 2 + height };
 }
@@ -92,9 +102,7 @@ function TabItem({ name, label, icon, index, nav, progress, labelWidths, onFocus
         accessibilityState={{ selected: focused }}
         style={styles.tab}
       >
-        <Animated.View style={glyph}>
-          <Icon name={icon} size={20} />
-        </Animated.View>
+        <Animated.View style={glyph}>{name === 'player' ? <PlayerGlyph icon={icon} /> : <Icon name={icon} size={20} />}</Animated.View>
         <Animated.View style={[styles.label, text]}>
           <Txt variant="label" numberOfLines={1} onLayout={onLabelLayout}>
             {label}
@@ -102,6 +110,32 @@ function TabItem({ name, label, icon, index, nav, progress, labelWidths, onFocus
         </Animated.View>
       </PressableScale>
     </Animated.View>
+  );
+}
+
+function PlayerGlyph({ icon }: { icon: IconName }) {
+  const item = useApp(currentItem);
+  if (!item) return <Icon name={icon} size={20} />;
+  return (
+    <View style={styles.glyphArt}>
+      <Artwork item={item} size={20} />
+    </View>
+  );
+}
+
+function NowPlayingDisc({ bottom }: { bottom: number }) {
+  const item = useApp(currentItem);
+  const playing = useApp((s) => s.status.isPlaying);
+  const { switchTab } = useTabTrigger({ name: 'player' });
+  if (!item) return null;
+  return (
+    <PressableScale
+      onPress={() => switchTab('player', {})}
+      accessibilityLabel={`Now playing: ${item.title}. Opens the player.`}
+      style={[styles.disc, { bottom }]}
+    >
+      <Vinyl item={item} size={DISC} spinning={playing} labelRatio={0.5} />
+    </PressableScale>
   );
 }
 
@@ -177,6 +211,7 @@ export function IslandNav() {
   const onPlayer = playerTrigger?.isFocused ?? false;
   const hasTrack = useApp((s) => s.status.index >= 0);
   const { expanded, bottom } = useIslandMetrics(onPlayer);
+  const wide = useWide();
 
   const collapsedWidth = Math.min(width - layout.gutter * 2, 380);
   const expandedWidth = Math.min(width - layout.gutter * 2, 520);
@@ -233,7 +268,7 @@ export function IslandNav() {
           container,
         ]}
       >
-        {hasTrack ? (
+        {hasTrack && !wide ? (
           <View pointerEvents={expanded ? 'auto' : 'none'}>
             <NowPlayingStrip open={open} />
           </View>
@@ -253,12 +288,15 @@ export function IslandNav() {
           ))}
         </View>
       </Animated.View>
+      {wide && hasTrack && !onPlayer ? <NowPlayingDisc bottom={bottom - (DISC - layout.navHeight) / 2} /> : null}
     </View>
   );
 }
 
 const styles = StyleSheet.create({
   anchor: { justifyContent: 'flex-end', alignItems: 'center' },
+  glyphArt: { width: 20, height: 20, borderRadius: 10, overflow: 'hidden' },
+  disc: { position: 'absolute', right: layout.gutter * 2, borderRadius: DISC / 2 },
   island: {
     borderRadius: 32,
     overflow: 'hidden',
