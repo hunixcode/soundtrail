@@ -6,6 +6,7 @@ import Animated, { FadeIn, FadeOut, useAnimatedStyle, useSharedValue, withDelay,
 
 import type { LibraryItem } from '../../../modules/soundtrail-audio';
 import { Artwork } from '../../components/Artwork';
+import { CoverBackdrop } from '../../components/CoverBackdrop';
 import { Vinyl } from '../../components/Vinyl';
 import { Icon } from '../../components/Icon';
 import { useIslandMetrics } from '../../components/IslandNav';
@@ -20,13 +21,11 @@ import { FINE_SPEED, SPEED_STEP, formatSpeed } from '../../audio/speed';
 import { subtitle } from '../../library/format';
 import {
   currentItem,
-  loadCoverColor,
   setSpeed,
   skipTo,
   useApp,
 } from '../../state/app';
 import { TAB_HREF, previousTab } from '../../state/nav';
-import { tintFor } from '../../theme/tint';
 import { useColors, useScheme } from '../../theme/useTheme';
 import { motion, radius, space } from '../../theme/tokens';
 
@@ -54,22 +53,7 @@ export default function PlayerScreen() {
   };
   const toggle = (next: Stage) => setStage((s) => (s === next ? 'art' : next));
   const artSize = Math.min((width - space.xxl * 2) / (1 + VINYL_PEEK), height * 0.42);
-  const scheme = useScheme();
   const playing = useApp((s) => s.status.isPlaying);
-  const cover = useApp((s) => (item ? s.artwork[item.uri] : null));
-  const coverColor = useApp((s) => (cover ? s.coverColors[cover] : null));
-  const backdropColor = tintFor(coverColor, scheme) ?? colors.bgBase;
-  const tint = useSharedValue(backdropColor);
-
-  useEffect(() => {
-    if (cover) loadCoverColor(cover);
-  }, [cover]);
-
-  useEffect(() => {
-    tint.set(withTiming(backdropColor, motion.slow));
-  }, [backdropColor, tint]);
-
-  const backdrop = useAnimatedStyle(() => ({ backgroundColor: tint.value }));
 
   const rise = useSharedValue(0);
   useFocusEffect(
@@ -87,7 +71,7 @@ export default function PlayerScreen() {
   }));
 
   return (
-    <Screen onTouchStart={closeOutside} backdrop={<Animated.View style={[StyleSheet.absoluteFill, backdrop]} />}>
+    <Screen onTouchStart={closeOutside} backdrop={<CoverBackdrop item={item} />}>
       <View style={styles.topBar}>
         <View style={styles.side}>
           <PressableScale
