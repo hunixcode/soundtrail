@@ -40,7 +40,12 @@
     ],
     "extra": {
       "lyricsApi": "https://lrclib.net/api",
-      "streamApi": "https://api.audius.co/v1"
+      "streamApi": "https://api.audius.co/v1",
+      "musicSite": "https://music.youtube.com",
+      "musicClient": {
+        "clientName": "WEB_REMIX",
+        "clientVersion": "1.20260101.01.00"
+      }
     }
   }
 }
