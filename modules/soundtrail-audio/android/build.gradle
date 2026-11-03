@@ -7,6 +7,7 @@ group = 'expo.modules.soundtrailaudio'
 version = '0.1.0'
 
 def media3Version = '1.11.1'
+def youtubedlVersion = '0.18.1'
 
 android {
   namespace "expo.modules.soundtrailaudio"
@@ -22,5 +23,11 @@ android {
 dependencies {
   implementation "androidx.media3:media3-exoplayer:${media3Version}"
   implementation "androidx.media3:media3-session:${media3Version}"
+  implementation "io.github.junkfood02.youtubedl-android:library:${youtubedlVersion}"
+  implementation "io.github.junkfood02.youtubedl-android:ffmpeg:${youtubedlVersion}"
+  constraints {
+    implementation "com.fasterxml.jackson.core:jackson-databind:2.22.4"
+    implementation "commons-io:commons-io:2.22.0"
+  }
   testImplementation "junit:junit:4.13.2"
 }
