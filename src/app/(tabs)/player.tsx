@@ -30,7 +30,7 @@ import {
 } from '../../state/app';
 import { TAB_HREF, previousTab } from '../../state/nav';
 import { useColors, useScheme } from '../../theme/useTheme';
-import { layout, motion, radius, space } from '../../theme/tokens';
+import { motion, radius, space } from '../../theme/tokens';
 
 type Stage = 'art' | 'lyrics' | 'queue';
 
@@ -55,7 +55,7 @@ export default function PlayerScreen() {
     });
   };
   const toggle = (next: Stage) => setStage((s) => (s === next ? 'art' : next));
-  const artSize = Math.min(width - space.xxl * 2, layout.maxContentWidth - space.xxl * 2, height * 0.42);
+  const artSize = Math.min(width - space.xxl * 2, height * 0.42);
 
   const rise = useSharedValue(0);
   useFocusEffect(

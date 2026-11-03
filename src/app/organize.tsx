@@ -5,7 +5,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { BackHeader } from '../components/BackHeader';
 import { Empty } from '../components/Empty';
 import { PressableScale } from '../components/PressableScale';
-import { Screen } from '../components/Screen';
+import { Screen, useColumns } from '../components/Screen';
 import { Txt } from '../components/Txt';
 import { planOrganize, type Move } from '../online/organize';
 import { isDeviceFile, organizeLibrary, useApp } from '../state/app';
@@ -23,6 +23,7 @@ type Phase =
 export default function OrganizeScreen() {
   const colors = useColors();
   const insets = useSafeAreaInsets();
+  const { columns, itemWidth } = useColumns();
   const library = useApp((s) => s.library);
   const [instruction, setInstruction] = useState('');
   const [phase, setPhase] = useState<Phase>({ step: 'idle' });
@@ -69,9 +70,11 @@ export default function OrganizeScreen() {
       <BackHeader title="Organize" />
       <FlatList
         data={moves}
+        key={columns}
+        numColumns={columns}
         keyExtractor={(move) => move.item.id}
         renderItem={({ item: move }) => (
-          <View style={[styles.row, { borderBottomColor: colors.borderSubtle }]}>
+          <View style={[styles.row, { width: itemWidth, borderBottomColor: colors.borderSubtle }]}>
             <Txt variant="bodyStrong" numberOfLines={1}>
               {move.name}
             </Txt>

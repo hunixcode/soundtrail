@@ -1,11 +1,19 @@
 import { useCallback, type ReactNode } from 'react';
-import { StyleSheet, View, type StyleProp, type ViewProps, type ViewStyle } from 'react-native';
+import { StyleSheet, View, useWindowDimensions, type StyleProp, type ViewProps, type ViewStyle } from 'react-native';
 import { useFocusEffect } from 'expo-router';
 import Animated, { useAnimatedStyle, useSharedValue, withTiming } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { useColors } from '../theme/useTheme';
 import { layout, motion } from '../theme/tokens';
+
+export const ROW_MIN_WIDTH = 360;
+
+export function useColumns(minWidth = ROW_MIN_WIDTH) {
+  const { width } = useWindowDimensions();
+  const columns = Math.max(1, Math.floor((width - layout.gutter * 2) / minWidth));
+  return { columns, itemWidth: Math.floor(width / columns) };
+}
 
 export function Screen({
   children,
@@ -37,6 +45,6 @@ export function Screen({
 }
 
 const styles = StyleSheet.create({
-  root: { flex: 1, alignItems: 'center' },
-  content: { flex: 1, width: '100%', maxWidth: layout.maxContentWidth },
+  root: { flex: 1 },
+  content: { flex: 1, width: '100%' },
 });

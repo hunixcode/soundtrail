@@ -8,7 +8,7 @@ import { Empty } from '../../components/Empty';
 import { Icon } from '../../components/Icon';
 import { useIslandMetrics } from '../../components/IslandNav';
 import { PressableScale } from '../../components/PressableScale';
-import { Screen } from '../../components/Screen';
+import { Screen, useColumns } from '../../components/Screen';
 import { TrackRow } from '../../components/TrackRow';
 import { TrackMenu } from '../../components/TrackMenu';
 import { TrackTile } from '../../components/TrackTile';
@@ -110,8 +110,9 @@ export default function LibraryScreen() {
   const view = useApp((s) => s.prefs.libraryView);
   const { width } = useWindowDimensions();
   const grid = view === 'grid';
-  const inner = Math.min(width, layout.maxContentWidth) - layout.gutter * 2;
-  const columns = Math.max(2, Math.floor((inner + space.lg) / (TILE_MIN + space.lg)));
+  const inner = width - layout.gutter * 2;
+  const rows = useColumns();
+  const columns = grid ? Math.max(2, Math.floor((inner + space.lg) / (TILE_MIN + space.lg))) : rows.columns;
   const tile = Math.floor((inner - space.lg * (columns - 1)) / columns);
 
   const renderItem = useCallback(
@@ -119,9 +120,11 @@ export default function LibraryScreen() {
       grid ? (
         <TrackTile item={item} size={tile} active={item.id === mediaId} playing={playing} onPress={onPress} onLongPress={setMenuItem} />
       ) : (
-        <TrackRow item={item} active={item.id === mediaId} playing={playing} onPress={onPress} onLongPress={setMenuItem} />
+        <View style={{ width: rows.itemWidth }}>
+          <TrackRow item={item} active={item.id === mediaId} playing={playing} onPress={onPress} onLongPress={setMenuItem} />
+        </View>
       ),
-    [grid, tile, mediaId, playing, onPress],
+    [grid, tile, rows.itemWidth, mediaId, playing, onPress],
   );
 
   return (
@@ -210,11 +213,11 @@ export default function LibraryScreen() {
         <Empty icon="alert-circle" title="Could not read your library" body="Try again in a moment." action="Retry" onAction={() => scanLibrary()} />
       ) : (
         <FlatList
-          key={grid ? `grid:${columns}` : 'list'}
+          key={`${view}:${columns}`}
           data={items}
           keyExtractor={(item) => item.id}
           renderItem={renderItem}
-          numColumns={grid ? columns : 1}
+          numColumns={columns}
           columnWrapperStyle={grid ? styles.gridRow : undefined}
           contentContainerStyle={[grid && styles.grid, { paddingBottom: reserve }]}
           keyboardShouldPersistTaps="handled"

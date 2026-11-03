@@ -8,7 +8,7 @@ import { Chip } from '../components/Chip';
 import { Empty } from '../components/Empty';
 import { Icon } from '../components/Icon';
 import { PressableScale } from '../components/PressableScale';
-import { Screen } from '../components/Screen';
+import { Screen, useColumns } from '../components/Screen';
 import { YouTubeRow } from '../components/YouTubeRow';
 import { playlistFromLink, searchMusic, type SearchFilter, type YtResult } from '../online/youtube';
 import { download } from '../state/downloads';
@@ -27,6 +27,7 @@ type Search = { key: string; status: 'ready' | 'error'; items: YtResult[] };
 export default function YouTubeScreen() {
   const colors = useColors();
   const insets = useSafeAreaInsets();
+  const { columns, itemWidth } = useColumns();
   const [query, setQuery] = useState('');
   const [filter, setFilter] = useState<SearchFilter>('songs');
   const [attempt, setAttempt] = useState(0);
@@ -98,7 +99,13 @@ export default function YouTubeScreen() {
         <FlatList
           data={items}
           keyExtractor={(item) => `${item.kind}:${item.id}`}
-          renderItem={({ item }) => <YouTubeRow item={item} onPress={onPress} />}
+          key={columns}
+          numColumns={columns}
+          renderItem={({ item }) => (
+            <View style={{ width: itemWidth }}>
+              <YouTubeRow item={item} onPress={onPress} />
+            </View>
+          )}
           contentContainerStyle={{ paddingBottom: insets.bottom + space.xl }}
           keyboardShouldPersistTaps="handled"
           initialNumToRender={14}

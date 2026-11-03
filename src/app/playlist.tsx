@@ -6,7 +6,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { BackHeader } from '../components/BackHeader';
 import { Empty } from '../components/Empty';
 import { PressableScale } from '../components/PressableScale';
-import { Screen } from '../components/Screen';
+import { Screen, useColumns } from '../components/Screen';
 import { Txt } from '../components/Txt';
 import { YouTubeRow } from '../components/YouTubeRow';
 import { loadList, type YtResult, type YtTrack } from '../online/youtube';
@@ -19,6 +19,7 @@ type List = { key: string; status: 'ready' | 'error'; title: string; tracks: YtT
 export default function PlaylistScreen() {
   const colors = useColors();
   const insets = useSafeAreaInsets();
+  const { columns, itemWidth } = useColumns();
   const { id = '', title: given = '' } = useLocalSearchParams<{ id: string; title?: string }>();
   const [attempt, setAttempt] = useState(0);
   const [list, setList] = useState<List>({ key: '', status: 'ready', title: '', tracks: [] });
@@ -57,7 +58,13 @@ export default function PlaylistScreen() {
         <FlatList
           data={tracks}
           keyExtractor={(item) => item.id}
-          renderItem={({ item }) => <YouTubeRow item={item} onPress={onPress} />}
+          key={columns}
+          numColumns={columns}
+          renderItem={({ item }) => (
+            <View style={{ width: itemWidth }}>
+              <YouTubeRow item={item} onPress={onPress} />
+            </View>
+          )}
           contentContainerStyle={{ paddingBottom: insets.bottom + space.xl }}
           initialNumToRender={14}
           windowSize={7}

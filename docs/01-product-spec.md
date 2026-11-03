@@ -112,7 +112,7 @@ The mini player is the navbar's expanded "island" state, not a separate bar:
 6. **Organize** (opened from the Library header): optional instruction, Suggest button, the AI's progress, then the list of changes with Apply and Try again.
 7. **Settings** (opened from the Library gear icon): reset equalizer, reset speed, clear library cache, app version. Nothing else in v1.
 
-Layout rules: Android phone portrait first. Touch targets at least 48 dp. Text readable with the system font-size setting. The navbar respects the bottom safe-area inset. On wide screens (tablets) content is centered with a maximum width.
+Layout rules: Android phone portrait first. Touch targets at least 48 dp. Text readable with the system font-size setting. The navbar respects the bottom safe-area inset. On wide screens (tablets) content uses the full width: lists flow into as many columns of rows as fit (at least 360 dp each), the grid adds tiles, and the Player artwork grows with the screen. Bottom sheets stay at the phone width, centered.
 
 ## 6. Non-goals (v1)
 
