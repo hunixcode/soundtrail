@@ -6,6 +6,7 @@ import Animated, { FadeIn, FadeOut, useAnimatedStyle, useSharedValue, withDelay,
 
 import type { LibraryItem } from '../../../modules/soundtrail-audio';
 import { Artwork } from '../../components/Artwork';
+import { Vinyl } from '../../components/Vinyl';
 import { Icon, type IconName } from '../../components/Icon';
 import { useIslandMetrics } from '../../components/IslandNav';
 import { LyricsView } from '../../components/LyricsView';
@@ -19,6 +20,7 @@ import { formatTime, subtitle } from '../../library/format';
 import {
   currentItem,
   cycleRepeat,
+  loadCoverColor,
   next,
   previous,
   seekTo,
@@ -29,6 +31,7 @@ import {
   useApp,
 } from '../../state/app';
 import { TAB_HREF, previousTab } from '../../state/nav';
+import { tintFor } from '../../theme/tint';
 import { useColors, useScheme } from '../../theme/useTheme';
 import { motion, radius, space } from '../../theme/tokens';
 
@@ -55,7 +58,23 @@ export default function PlayerScreen() {
     });
   };
   const toggle = (next: Stage) => setStage((s) => (s === next ? 'art' : next));
-  const artSize = Math.min(width - space.xxl * 2, height * 0.42);
+  const artSize = Math.min((width - space.xxl * 2) / (1 + VINYL_PEEK), height * 0.42);
+  const scheme = useScheme();
+  const playing = useApp((s) => s.status.isPlaying);
+  const cover = useApp((s) => (item ? s.artwork[item.uri] : null));
+  const coverColor = useApp((s) => (cover ? s.coverColors[cover] : null));
+  const backdropColor = tintFor(coverColor, scheme) ?? colors.bgBase;
+  const tint = useSharedValue(backdropColor);
+
+  useEffect(() => {
+    if (cover) loadCoverColor(cover);
+  }, [cover]);
+
+  useEffect(() => {
+    tint.set(withTiming(backdropColor, motion.slow));
+  }, [backdropColor, tint]);
+
+  const backdrop = useAnimatedStyle(() => ({ backgroundColor: tint.value }));
 
   const rise = useSharedValue(0);
   useFocusEffect(
@@ -73,7 +92,7 @@ export default function PlayerScreen() {
   }));
 
   return (
-    <Screen onTouchStart={closeOutside}>
+    <Screen onTouchStart={closeOutside} backdrop={<Animated.View style={[StyleSheet.absoluteFill, backdrop]} />}>
       <View style={styles.topBar}>
         <View style={styles.side}>
           <PressableScale
@@ -120,7 +139,10 @@ export default function PlayerScreen() {
               </Animated.View>
             ) : (
               <Animated.View key="art" entering={FadeIn.duration(250)} exiting={FadeOut.duration(150)} style={styles.artWrap}>
-                <Animated.View style={artStyle}>
+                <Animated.View style={[artStyle, { width: artSize * (1 + VINYL_PEEK), height: artSize }]}>
+                  <View style={[styles.vinyl, { top: artSize * 0.03 }]}>
+                    <Vinyl item={item} size={artSize * 0.94} spinning={playing} />
+                  </View>
                   <Artwork item={item} size={artSize} />
                 </Animated.View>
               </Animated.View>
@@ -162,6 +184,7 @@ export default function PlayerScreen() {
   );
 }
 
+const VINYL_PEEK = 0.28;
 const FINE_STEPS = Math.round((FINE_SPEED.max - FINE_SPEED.min) / SPEED_STEP);
 const BADGE_WIDTH = 76;
 const BADGE_HEIGHT = 36;
@@ -370,6 +393,7 @@ const styles = StyleSheet.create({
   fill: { alignSelf: 'stretch', flex: 1, marginHorizontal: -space.xl },
   lyrics: { alignSelf: 'stretch', flex: 1 },
   artWrap: { alignItems: 'center', justifyContent: 'center' },
+  vinyl: { position: 'absolute', right: 0 },
   meta: { flexDirection: 'row', alignItems: 'flex-end', gap: space.md },
   metaText: { flex: 1, gap: space.xs },
   badgeSlot: { width: BADGE_WIDTH, height: BADGE_HEIGHT },

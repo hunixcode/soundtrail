@@ -19,8 +19,10 @@ export function Screen({
   children,
   style,
   onTouchStart,
+  backdrop,
 }: {
   children: ReactNode;
+  backdrop?: ReactNode;
   style?: StyleProp<ViewStyle>;
   onTouchStart?: ViewProps['onTouchStart'];
 }) {
@@ -39,6 +41,7 @@ export function Screen({
 
   return (
     <View style={[styles.root, { backgroundColor: colors.bgBase, paddingTop: insets.top }]} onTouchStart={onTouchStart}>
+      {backdrop}
       <Animated.View style={[styles.content, fade, style]}>{children}</Animated.View>
     </View>
   );

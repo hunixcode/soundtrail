@@ -11,6 +11,8 @@ export const palettes = {
     fgTertiary: '#6B6B6B',
     fgInverse: '#000000',
     scrim: 'rgba(0, 0, 0, 0.6)',
+    vinyl: '#0B0B0B',
+    groove: '#2A2A2A',
   },
   light: {
     bgBase: '#FFFFFF',
@@ -22,6 +24,8 @@ export const palettes = {
     fgTertiary: '#8C8C8C',
     fgInverse: '#FFFFFF',
     scrim: 'rgba(0, 0, 0, 0.35)',
+    vinyl: '#0B0B0B',
+    groove: '#2A2A2A',
   },
 } as const;
 
