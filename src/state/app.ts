@@ -29,6 +29,7 @@ export type AppState = {
   error: PlaybackError | null;
   equalizer: EqualizerState;
   artwork: Record<string, string | null>;
+  coverColors: Record<string, string | null>;
   prefs: Prefs;
 };
 
@@ -67,6 +68,7 @@ export const store = createStore<AppState>({
   error: null,
   equalizer: { available: false, enabled: false, bands: [] },
   artwork: {},
+  coverColors: {},
   prefs: DEFAULT_PREFS,
 });
 
@@ -368,6 +370,18 @@ export async function loadArtwork(uri: string) {
   const result = await Audio.getArtwork(uri).catch(() => null);
   pendingArtwork.delete(uri);
   store.set((s) => ({ artwork: { ...s.artwork, [uri]: result } }));
+}
+
+const pendingColors = new Set<string>();
+
+export async function loadCoverColor(source: string) {
+  if (source in store.get().coverColors || pendingColors.has(source)) return;
+  pendingColors.add(source);
+  const color = await Promise.resolve()
+    .then(() => Audio.getCoverColor(source))
+    .catch(() => null);
+  pendingColors.delete(source);
+  store.set((s) => ({ coverColors: { ...s.coverColors, [source]: color } }));
 }
 
 export async function pickFile() {
