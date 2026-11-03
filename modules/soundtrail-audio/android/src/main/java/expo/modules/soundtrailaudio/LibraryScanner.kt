@@ -19,8 +19,10 @@ object LibraryScanner {
       MediaStore.Audio.Media.DISPLAY_NAME,
       MediaStore.Audio.Media.ARTIST,
       MediaStore.Audio.Media.ALBUM,
-      MediaStore.Audio.AudioColumns.DURATION
-    ) + if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) arrayOf(MediaStore.MediaColumns.RELATIVE_PATH) else emptyArray()
+      MediaStore.Audio.AudioColumns.DURATION,
+      MediaStore.MediaColumns.DATE_ADDED
+    ) + (if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) arrayOf(MediaStore.MediaColumns.RELATIVE_PATH) else emptyArray()) +
+      (if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) arrayOf(MediaStore.Audio.AudioColumns.GENRE) else emptyArray())
     val selection = "${MediaStore.Audio.Media.IS_NOTIFICATION} = 0 AND " +
       "${MediaStore.Audio.Media.IS_RINGTONE} = 0 AND " +
       "${MediaStore.Audio.Media.IS_ALARM} = 0 AND " +
@@ -34,6 +36,8 @@ object LibraryScanner {
       val album = c.getColumnIndexOrThrow(MediaStore.Audio.Media.ALBUM)
       val duration = c.getColumnIndexOrThrow(MediaStore.Audio.AudioColumns.DURATION)
       val folder = c.getColumnIndex(MediaStore.MediaColumns.RELATIVE_PATH)
+      val added = c.getColumnIndexOrThrow(MediaStore.MediaColumns.DATE_ADDED)
+      val genre = c.getColumnIndex(MediaStore.Audio.AudioColumns.GENRE)
       while (c.moveToNext()) {
         val rowId = c.getLong(id)
         items.add(
@@ -45,7 +49,9 @@ object LibraryScanner {
             "album" to c.getString(album)?.takeIf { it.isNotBlank() && it != UNKNOWN },
             "durationMs" to c.getLong(duration).toDouble(),
             "fileName" to c.getString(name),
-            "folder" to if (folder >= 0) c.getString(folder) else null
+            "folder" to if (folder >= 0) c.getString(folder) else null,
+            "addedAt" to c.getLong(added) * 1000.0,
+            "genre" to (if (genre >= 0) c.getString(genre) else null)?.takeIf { it.isNotBlank() && it != UNKNOWN }
           )
         )
       }

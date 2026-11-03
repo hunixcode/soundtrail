@@ -9,6 +9,8 @@ export type LibraryItem = {
   durationMs: number;
   fileName?: string | null;
   folder?: string | null;
+  addedAt?: number;
+  genre?: string | null;
 };
 
 export type FileDescription = {
