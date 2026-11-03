@@ -30,6 +30,7 @@ import expo.modules.kotlin.modules.Module
 import expo.modules.kotlin.modules.ModuleDefinition
 import expo.modules.kotlin.records.Field
 import expo.modules.kotlin.records.Record
+import java.util.concurrent.Executors
 
 class QueueItem : Record {
   @Field
@@ -48,10 +49,22 @@ class QueueItem : Record {
   val artworkUri: String? = null
 }
 
+class FileMove : Record {
+  @Field
+  val uri: String = ""
+
+  @Field
+  val folder: String = ""
+
+  @Field
+  val name: String = ""
+}
+
 class FileEditException(message: String) : CodedException("FILE_EDIT_FAILED", message, null)
 
 class SoundtrailAudioModule : Module() {
   private val handler = Handler(Looper.getMainLooper())
+  private val background = Executors.newCachedThreadPool()
   private var consent: ((Boolean) -> Unit)? = null
   private var controller: ListenableFuture<MediaController>? = null
   private var attached: ExoPlayer? = null
@@ -211,6 +224,29 @@ class SoundtrailAudioModule : Module() {
       val path = MediaPaths.relativePath(folder) ?: return@AsyncFunction promise.reject(FileEditException("Invalid folder"))
       val values = ContentValues().apply { put(MediaStore.MediaColumns.RELATIVE_PATH, path) }
       update(Uri.parse(uri), values, promise)
+    }
+
+    AsyncFunction("organizeFiles") { moves: List<FileMove>, promise: Promise ->
+      if (Build.VERSION.SDK_INT < Build.VERSION_CODES.R) return@AsyncFunction promise.reject(FileEditException("Organizing needs Android 11"))
+      val targets = moves.mapNotNull { move ->
+        val path = MediaPaths.relativePath(move.folder) ?: return@mapNotNull null
+        val clean = MediaPaths.fileName(move.name) ?: return@mapNotNull null
+        val target = Uri.parse(move.uri)
+        val full = withExtension(target, clean) ?: return@mapNotNull null
+        target to ContentValues().apply {
+          put(MediaStore.MediaColumns.RELATIVE_PATH, path)
+          put(MediaStore.MediaColumns.DISPLAY_NAME, full)
+        }
+      }
+      if (targets.isEmpty()) return@AsyncFunction promise.resolve(0)
+      askConsent(MediaStore.createWriteRequest(context.contentResolver, targets.map { it.first })) { ok ->
+        if (!ok) return@askConsent promise.resolve(0)
+        background.execute {
+          promise.resolve(targets.count { (target, values) ->
+            runCatching { context.contentResolver.update(target, values, null, null) > 0 }.getOrDefault(false)
+          })
+        }
+      }
     }
 
     AsyncFunction("deleteFile") { uri: String, promise: Promise ->

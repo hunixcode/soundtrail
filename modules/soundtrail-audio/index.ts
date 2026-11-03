@@ -68,6 +68,12 @@ export type QueueItem = {
   artworkUri?: string | null;
 };
 
+export type FileMove = {
+  uri: string;
+  folder: string;
+  name: string;
+};
+
 type Events = {
   onStatus: (status: PlaybackStatus) => void;
   onError: (error: PlaybackError) => void;
@@ -98,6 +104,7 @@ declare class SoundtrailAudioModule extends NativeModule<Events> {
   renameFile(uri: string, name: string): Promise<boolean>;
   moveFile(uri: string, folder: string): Promise<boolean>;
   deleteFile(uri: string): Promise<boolean>;
+  organizeFiles(moves: FileMove[]): Promise<number>;
   enqueue(item: QueueItem, next: boolean): Promise<void>;
 }
 
