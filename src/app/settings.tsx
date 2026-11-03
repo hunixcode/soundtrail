@@ -1,7 +1,7 @@
 import { Alert, ScrollView, StyleSheet, View } from 'react-native';
 import Constants from 'expo-constants';
-import { router } from 'expo-router';
 
+import { BackHeader } from '../components/BackHeader';
 import { Chip } from '../components/Chip';
 import { Icon, type IconName } from '../components/Icon';
 import { PressableScale } from '../components/PressableScale';
@@ -29,14 +29,7 @@ export default function SettingsScreen() {
 
   return (
     <Screen>
-      <View style={styles.header}>
-        <PressableScale onPress={() => router.back()} accessibilityLabel="Back" style={styles.iconButton}>
-          <Icon name="arrow-left" size={24} />
-        </PressableScale>
-        <Txt variant="title" accessibilityRole="header">
-          Settings
-        </Txt>
-      </View>
+      <BackHeader title="Settings" />
       <ScrollView contentContainerStyle={styles.content}>
         <View style={styles.group}>
           <Txt variant="label" tone="secondary">
@@ -106,15 +99,6 @@ function Row({ icon, title, body, onPress }: { icon: IconName; title: string; bo
 }
 
 const styles = StyleSheet.create({
-  header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: space.sm,
-    paddingHorizontal: space.sm,
-    paddingTop: space.lg,
-    paddingBottom: space.md,
-  },
-  iconButton: { width: 48, height: 48, alignItems: 'center', justifyContent: 'center' },
   content: { paddingHorizontal: layout.gutter, gap: space.xl, paddingBottom: space.xxxl },
   group: { gap: space.md },
   chips: { flexDirection: 'row', gap: space.sm },
