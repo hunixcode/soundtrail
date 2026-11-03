@@ -45,6 +45,14 @@
       "musicClient": {
         "clientName": "WEB_REMIX",
         "clientVersion": "1.20260101.01.00"
+      },
+      "aiApi": "https://text.pollinations.ai/openai",
+      "aiRequest": {
+        "model": "openai",
+        "reasoning_effort": "low",
+        "response_format": {
+          "type": "json_object"
+        }
       }
     }
   }

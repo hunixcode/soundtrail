@@ -1,6 +1,13 @@
 import Constants from 'expo-constants';
 
-type Extra = { lyricsApi?: string; streamApi?: string; musicSite?: string; musicClient?: Record<string, string> };
+type Extra = {
+  lyricsApi?: string;
+  streamApi?: string;
+  musicSite?: string;
+  musicClient?: Record<string, string>;
+  aiApi?: string;
+  aiRequest?: Record<string, unknown>;
+};
 
 const extra = (Constants.expoConfig?.extra ?? {}) as Extra;
 
@@ -8,9 +15,11 @@ export const endpoints = {
   lyrics: extra.lyricsApi ?? '',
   stream: extra.streamApi ?? '',
   music: extra.musicSite ?? '',
+  ai: extra.aiApi ?? '',
 };
 
 export const musicClient = extra.musicClient ?? {};
+export const aiRequest = extra.aiRequest ?? {};
 
 export const appName = Constants.expoConfig?.slug ?? 'app';
 export const appVersion = Constants.expoConfig?.version ?? '0';
