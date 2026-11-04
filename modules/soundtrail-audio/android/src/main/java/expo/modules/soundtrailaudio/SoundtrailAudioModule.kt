@@ -11,6 +11,7 @@ import android.os.Build
 import android.os.Handler
 import android.os.Looper
 import android.provider.MediaStore
+import android.util.Log
 import androidx.media3.common.C
 import androidx.media3.common.MediaItem
 import androidx.media3.common.MediaMetadata
@@ -260,7 +261,10 @@ class SoundtrailAudioModule : Module() {
       background.execute {
         runCatching { Downloader.fetch(app, id, url, path, clean) { sendEvent("onDownload", mapOf("id" to id, "progress" to it)) } }
           .onSuccess { promise.resolve(it) }
-          .onFailure { promise.reject(DownloadException(it.message ?: "Download failed")) }
+          .onFailure {
+            Log.e("SoundtrailAudio", "Download $id failed", it)
+            promise.reject(DownloadException(it.message ?: "Download failed"))
+          }
       }
     }
 
