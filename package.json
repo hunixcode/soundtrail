@@ -1,6 +1,6 @@
 {
   "name": "soundtrail",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "main": "expo-router/entry",
   "dependencies": {
     "@expo-google-fonts/archivo": "^0.4.2",

@@ -2,12 +2,13 @@
   "expo": {
     "name": "soundtrail",
     "slug": "soundtrail",
-    "version": "1.0.0",
+    "version": "1.0.1",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "automatic",
     "android": {
       "package": "com.soundtrail.app",
+      "versionCode": 2,
       "adaptiveIcon": {
         "backgroundColor": "#000000",
         "foregroundImage": "./assets/android-icon-foreground.png",
